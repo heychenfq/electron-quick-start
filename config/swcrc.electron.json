@@ -1,0 +1,25 @@
+{
+	"exclude": [
+		"src\/browser\/.*\/?.*",
+		"src\/.*\/?preload\/.*\/?.*",
+		"src\/preload.ts$"
+	],
+	"sourceMaps": true,
+	"jsc": {
+    "parser": {
+      "syntax": "typescript",
+			"tsx": false,
+      "decorators": true,
+      "dynamicImport": true
+    },
+    "transform": {
+			"legacyDecorator": true,
+      "decoratorMetadata": true
+		},
+    "target": "es2016",
+    "loose": false,
+    "externalHelpers": true,
+    "keepClassNames": true,
+		"baseUrl": "../src"
+  }
+}

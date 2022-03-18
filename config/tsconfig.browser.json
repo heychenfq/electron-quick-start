@@ -1,0 +1,9 @@
+{
+	"extends": "../tsconfig.json",
+	"include": ["src/browser/**/*"],
+	"compilerOptions": {
+		"module": "esnext",
+		"jsx": "react",
+		"sourceMap": true
+	}
+}
