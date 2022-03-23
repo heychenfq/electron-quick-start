@@ -7,7 +7,7 @@ const APP_ROOT = app.getAppPath();
 function createWindow () {
   const mainWindow = new BrowserWindow({
     webPreferences: {
-      preload: path.resolve(__dirname, isDev ? '../dist/preload.js' : './preload.js'),
+      preload: path.resolve(__dirname, isDev ? '../output/preload.js' : './preload.js'),
     },
   });
 

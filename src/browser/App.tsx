@@ -9,6 +9,11 @@ const App: FC = () => {
 	return (
 		<div>
 			<h1>Hello Electron!</h1>
+			<div>
+				<div>electron version: {electronAPI.appInfo.electronVersion}</div>
+				<div>node version: {electronAPI.appInfo.nodeVersion}</div>
+				<div>chrome version: {electronAPI.appInfo.chromeVersion}</div>
+			</div>
 			<form onSubmit={handleSubmit}>
 				<label>
 					title

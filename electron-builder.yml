@@ -16,6 +16,6 @@ extraMetadata: # Inject properties to package.json
   main: './main.js'
 forceCodeSigning: false # Whether to fail if the application is not signed
 detectUpdateChannel: true # Whether to infer update channel from application version pre-release components
-generateUpdatesFilesForAllChannels: true 
+generateUpdatesFilesForAllChannels: true
 mac:
   target: "dmg"
