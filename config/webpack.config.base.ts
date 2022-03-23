@@ -8,7 +8,7 @@ const baseConfig: Configuration = {
 		main: './src/browser/index',
 	},
 	output: {
-		path: path.resolve(__dirname, '../dist/browser'),
+		path: path.resolve(__dirname, '../output/browser'),
 	},
 	module: {
     rules: [

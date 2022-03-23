@@ -1,0 +1,21 @@
+appId: "com.example.app" # appId, CFBundleIdentifier for MacOS and as Application User Model ID for Windows
+productName: "electron quick start" # App Name, default to name property of package.json
+copyright: "Copyright © 2022 ${author}"
+buildVersion: "1.1.0"
+asar: false
+directories:
+  app: "output" # root dir of app to package, should has a package.json file
+  buildResources: "build"
+  output: "dist" # output dir
+includeSubNodeModules: false
+buildDependenciesFromSource: false
+nodeGypRebuild: false
+npmRebuild: true
+electronCompile: false
+extraMetadata: # Inject properties to package.json
+  main: './main.js'
+forceCodeSigning: false # Whether to fail if the application is not signed
+detectUpdateChannel: true # Whether to infer update channel from application version pre-release components
+generateUpdatesFilesForAllChannels: true 
+mac:
+  target: "dmg"

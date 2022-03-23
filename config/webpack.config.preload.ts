@@ -8,7 +8,7 @@ const config: Configuration = {
 	target: 'electron-preload',
 	output: {
 		filename: 'preload.js',
-		path: path.resolve(__dirname, '../dist'),
+		path: path.resolve(__dirname, '../output'),
 	},
 	module: {
     rules: [

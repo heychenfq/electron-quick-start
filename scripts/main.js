@@ -5,4 +5,4 @@ require('ts-node').register({
 	swc: true,
 });
 
-require('../src/main/main');
+require('../src/main');
