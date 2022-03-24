@@ -24,7 +24,8 @@ const buildRenderer = () => {
 
 const buildMain = () => {
 	return new Promise<void>((resolve, reject) => {
-		const tscCompiler = spawn('swc', [
+		const swcBin = process.platform === 'win32' ? 'swc.CMD' : 'swc';
+		const tscCompiler = spawn(swcBin, [
 			path.resolve(__dirname, '../src'),
 			'--config-file', path.resolve(__dirname, '../config/swcrc.electron.json'),
 			'-d', path.resolve(__dirname, '../output'),
