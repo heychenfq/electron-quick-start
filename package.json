@@ -1,6 +1,6 @@
 {
   "name": "electron-quick-start",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "practice electron app",
   "author": "chenfuqiang<heychenfq.foxmail.com>",
   "scripts": {
