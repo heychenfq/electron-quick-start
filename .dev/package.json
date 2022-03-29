@@ -13,8 +13,5 @@
   "bugs": {
     "url": "https://github.com/heychenfq/electron-quick-start/issues"
   },
-  "homepage": "https://github.com/heychenfq/electron-quick-start#readme",
-  "dependencies": {
-    "@swc/helpers": "^0.3.8"
-  }
+  "homepage": "https://github.com/heychenfq/electron-quick-start#readme"
 }
