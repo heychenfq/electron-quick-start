@@ -11,7 +11,7 @@ const Update: FC = () => {
 
 	useEffect(() => {
 		return nativeHost.on('updateService', 'onError')((error: any) => {
-			setState(error.description);
+			setState(error.code);
 		});
 	}, []);
 	
