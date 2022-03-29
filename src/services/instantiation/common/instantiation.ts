@@ -38,7 +38,7 @@ export class InstantiationService {
 		while (stack.length) {
 			const node = stack.pop()!;
 			graph.lookupOrInsertNode(node);
-			const dependencies: DependenciesValue = (this.#getServiceDependencies(ServiceCtor) || []).sort((a, b) => a.parameterIndex - b.parameterIndex);
+			const dependencies: DependenciesValue = (this.#getServiceDependencies(node.ctor) || []).sort((a, b) => a.parameterIndex - b.parameterIndex);
 			for (const dependency of dependencies) {
 				if (this.#serviceStore.has(dependency.id)) continue;
 				const ServiceCtor = this.#getServiceCtorById(dependency.id);

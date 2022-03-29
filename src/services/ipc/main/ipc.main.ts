@@ -7,7 +7,8 @@ import { ipcMain, WebContents } from 'electron';
 import { VSBuffer } from '../../../core/base/buffer';
 import { Emitter, Event } from '../../../core/base/event';
 import { IDisposable, toDisposable } from '../../../core/base/lifecycle';
-import { service } from '../../instantiation/common/instantiation';
+import { inject, service } from '../../instantiation/common/instantiation';
+import { UpdateMainService } from '../../update/main/update.main';
 import { ClientConnectionEvent, IPCServer, Protocol } from '../common/ipc';
 
 interface IIPCEvent {
@@ -53,7 +54,10 @@ export class IpcMainServer extends IPCServer {
 		});
 	}
 
-	constructor() {
+	constructor(
+		@inject('updateMainService')
+		updateService: UpdateMainService,
+	) {
 		super(IpcMainServer.getOnDidClientConnect());
 	}
 }
