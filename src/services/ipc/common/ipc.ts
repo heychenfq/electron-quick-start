@@ -318,7 +318,7 @@ export class ChannelServer<TContext = string> implements IChannelServer<TContext
 	// They will timeout after `timeoutDelay`.
 	private pendingRequests = new Map<string, PendingRequest[]>();
 
-	constructor(private protocol: IMessagePassingProtocol, private ctx: TContext, private logger: IIPCLogger | null = null, private timeoutDelay: number = 1000) {
+	constructor(private protocol: IMessagePassingProtocol, private ctx: TContext, private logger?: ILogger, private timeoutDelay: number = 1000) {
 		this.protocolListener = this.protocol.onMessage(msg => this.onRawMessage(msg));
 		this.sendResponse({ type: ResponseType.Initialize });
 	}
@@ -334,7 +334,7 @@ export class ChannelServer<TContext = string> implements IChannelServer<TContext
 		switch (response.type) {
 			case ResponseType.Initialize: {
 				const msgLength = this.send([response.type]);
-				this.logger?.logOutgoing(msgLength, 0, RequestInitiator.OtherSide, responseTypeToStr(response.type));
+				this.logger?.log(formatLogMessage('Server', msgLength, 0, responseTypeToStr(response.type)))
 				return;
 			}
 
@@ -343,7 +343,7 @@ export class ChannelServer<TContext = string> implements IChannelServer<TContext
 			case ResponseType.EventFire:
 			case ResponseType.PromiseErrorObj: {
 				const msgLength = this.send([response.type, response.id], response.data);
-				this.logger?.logOutgoing(msgLength, response.id, RequestInitiator.OtherSide, responseTypeToStr(response.type), response.data);
+				this.logger?.log(formatLogMessage('Server', msgLength, response.id, responseTypeToStr(response.type), response.data));
 				return;
 			}
 		}
@@ -374,16 +374,16 @@ export class ChannelServer<TContext = string> implements IChannelServer<TContext
 
 		switch (type) {
 			case RequestType.Promise:
-				this.logger?.logIncoming(message.byteLength, header[1], RequestInitiator.OtherSide, `${requestTypeToStr(type)}: ${header[2]}.${header[3]}`, body);
+				this.logger?.log(formatLogMessage('Server', message.byteLength, header[1], `${requestTypeToStr(type)}: ${header[2]}.${header[3]}`, body));
 				return this.onPromise({ type, id: header[1], channelName: header[2], name: header[3], arg: body });
 			case RequestType.EventListen:
-				this.logger?.logIncoming(message.byteLength, header[1], RequestInitiator.OtherSide, `${requestTypeToStr(type)}: ${header[2]}.${header[3]}`, body);
+				this.logger?.log(formatLogMessage('Server', message.byteLength, header[1], `${requestTypeToStr(type)}: ${header[2]}.${header[3]}`, body));
 				return this.onEventListen({ type, id: header[1], channelName: header[2], name: header[3], arg: body });
 			case RequestType.PromiseCancel:
-				this.logger?.logIncoming(message.byteLength, header[1], RequestInitiator.OtherSide, `${requestTypeToStr(type)}`);
+				this.logger?.log(formatLogMessage('Server', message.byteLength, header[1], `${requestTypeToStr(type)}`));
 				return this.disposeActiveRequest({ type, id: header[1] });
 			case RequestType.EventDispose:
-				this.logger?.logIncoming(message.byteLength, header[1], RequestInitiator.OtherSide, `${requestTypeToStr(type)}`);
+				this.logger?.log(formatLogMessage('Server', message.byteLength, header[1], `${requestTypeToStr(type)}`));
 				return this.disposeActiveRequest({ type, id: header[1] });
 		}
 	}
@@ -504,14 +504,8 @@ export class ChannelServer<TContext = string> implements IChannelServer<TContext
 	}
 }
 
-export const enum RequestInitiator {
-	LocalSide = 0,
-	OtherSide = 1
-}
-
-export interface IIPCLogger {
-	logIncoming(msgLength: number, requestId: number, initiator: RequestInitiator, str: string, data?: any): void;
-	logOutgoing(msgLength: number, requestId: number, initiator: RequestInitiator, str: string, data?: any): void;
+export interface ILogger {
+	log(...args: any[]): void;
 }
 
 export class ChannelClient implements IChannelClient, IDisposable {
@@ -522,14 +516,12 @@ export class ChannelClient implements IChannelClient, IDisposable {
 	private handlers = new Map<number, IHandler>();
 	private lastRequestId: number = 0;
 	private protocolListener: IDisposable | null;
-	private logger: IIPCLogger | null;
 
 	private readonly _onDidInitialize = new Emitter<void>();
 	readonly onDidInitialize = this._onDidInitialize.event;
 
-	constructor(private protocol: IMessagePassingProtocol, logger: IIPCLogger | null = null) {
+	constructor(private protocol: IMessagePassingProtocol, private logger?: ILogger) {
 		this.protocolListener = this.protocol.onMessage(msg => this.onBuffer(msg));
-		this.logger = logger;
 	}
 
 	getChannel<T extends IChannel>(channelName: string): T {
@@ -662,18 +654,14 @@ export class ChannelClient implements IChannelClient, IDisposable {
 			case RequestType.Promise:
 			case RequestType.EventListen: {
 				const msgLength = this.send([request.type, request.id, request.channelName, request.name], request.arg);
-				if (this.logger) {
-					this.logger.logOutgoing(msgLength, request.id, RequestInitiator.LocalSide, `${requestTypeToStr(request.type)}: ${request.channelName}.${request.name}`, request.arg);
-				}
+				this.logger?.log(formatLogMessage('Client', msgLength, request.id, `${requestTypeToStr(request.type)}: ${request.channelName}.${request.name}`, request.arg));
 				return;
 			}
 
 			case RequestType.PromiseCancel:
 			case RequestType.EventDispose: {
 				const msgLength = this.send([request.type, request.id]);
-				if (this.logger) {
-					this.logger.logOutgoing(msgLength, request.id, RequestInitiator.LocalSide, requestTypeToStr(request.type));
-				}
+				this.logger?.log(formatLogMessage('Client', msgLength, request.id, requestTypeToStr(request.type)));
 				return;
 			}
 		}
@@ -704,18 +692,13 @@ export class ChannelClient implements IChannelClient, IDisposable {
 
 		switch (type) {
 			case ResponseType.Initialize:
-				if (this.logger) {
-					this.logger.logIncoming(message.byteLength, 0, RequestInitiator.LocalSide, responseTypeToStr(type));
-				}
+				this.logger?.log(formatLogMessage('Client', message.byteLength, 0, responseTypeToStr(type)));
 				return this.onResponse({ type: header[0] });
-
 			case ResponseType.PromiseSuccess:
 			case ResponseType.PromiseError:
 			case ResponseType.EventFire:
 			case ResponseType.PromiseErrorObj:
-				if (this.logger) {
-					this.logger.logIncoming(message.byteLength, header[1], RequestInitiator.LocalSide, responseTypeToStr(type), body);
-				}
+				this.logger?.log(formatLogMessage('Client', message.byteLength, header[1], responseTypeToStr(type), body));
 				return this.onResponse({ type: header[0], id: header[1], data: body });
 		}
 	}
@@ -758,7 +741,8 @@ export class ChannelClient implements IChannelClient, IDisposable {
 	}
 }
 
-export interface ClientConnectionEvent {
+export interface ClientConnectionEvent<TContext> {
+	ctx: TContext;
 	protocol: IMessagePassingProtocol;
 	onDidClientDisconnect: Event<void>;
 }
@@ -793,30 +777,28 @@ export class IPCServer<TContext = string> implements IChannelServer<TContext>, I
 		return result;
 	}
 
-	constructor(onDidClientConnect: Event<ClientConnectionEvent>) {
-		onDidClientConnect(({ protocol, onDidClientDisconnect }) => {
-			const onFirstMessage = Event.once(protocol.onMessage);
+	constructor(onDidClientConnect: Event<ClientConnectionEvent<TContext>>, logger?: ILogger) {
+		onDidClientConnect(({ protocol, onDidClientDisconnect, ctx }) => {
+			const writer = new BufferWriter();
+			serialize(writer, ctx);
+			protocol.send(writer.buffer);
 
-			onFirstMessage(msg => {
-				const reader = new BufferReader(msg);
-				const ctx = deserialize(reader) as TContext;
+			const channelServer = new ChannelServer(protocol, ctx, logger);
+			const channelClient = new ChannelClient(protocol, logger);
 
-				const channelServer = new ChannelServer(protocol, ctx);
-				const channelClient = new ChannelClient(protocol);
+			this.channels.forEach((channel, name) => channelServer.registerChannel(name, channel));
 
-				this.channels.forEach((channel, name) => channelServer.registerChannel(name, channel));
+			const connection: Connection<TContext> = { channelServer, channelClient, ctx };
+			this._connections.add(connection);
+			this._onDidAddConnection.fire(connection);
 
-				const connection: Connection<TContext> = { channelServer, channelClient, ctx };
-				this._connections.add(connection);
-				this._onDidAddConnection.fire(connection);
-
-				onDidClientDisconnect(() => {
-					channelServer.dispose();
-					channelClient.dispose();
-					this._connections.delete(connection);
-					this._onDidRemoveConnection.fire(connection);
-				});
+			onDidClientDisconnect(() => {
+				channelServer.dispose();
+				channelClient.dispose();
+				this._connections.delete(connection);
+				this._onDidRemoveConnection.fire(connection);
 			});
+
 		});
 	}
 
@@ -947,15 +929,24 @@ export class IPCServer<TContext = string> implements IChannelServer<TContext>, I
 export class IPCClient<TContext = string> implements IChannelClient, IChannelServer<TContext>, IDisposable {
 
 	private channelClient: ChannelClient;
-	private channelServer: ChannelServer<TContext>;
+	private channelServer?: ChannelServer<TContext>;
 
-	constructor(protocol: IMessagePassingProtocol, ctx: TContext, ipcLogger: IIPCLogger | null = null) {
-		const writer = new BufferWriter();
-		serialize(writer, ctx);
-		protocol.send(writer.buffer);
+	private ready: Promise<void>;
+	private isDisposed: boolean = false;
 
-		this.channelClient = new ChannelClient(protocol, ipcLogger);
-		this.channelServer = new ChannelServer(protocol, ctx, ipcLogger);
+	constructor(protocol: IMessagePassingProtocol, logger?: ILogger) {
+		this.channelClient = new ChannelClient(protocol, logger);
+		const onFirstMessage = Event.once(protocol.onMessage);
+		this.ready = new Promise((resolve) => {
+			onFirstMessage(msg => {
+				if (!this.isDisposed) {
+					const reader = new BufferReader(msg);
+					const ctx = deserialize(reader) as TContext;
+					this.channelServer = new ChannelServer(protocol, ctx, logger);
+				}
+				resolve();
+			});
+		});
 	}
 
 	getChannel<T extends IChannel>(channelName: string): T {
@@ -963,12 +954,17 @@ export class IPCClient<TContext = string> implements IChannelClient, IChannelSer
 	}
 
 	registerChannel(channelName: string, channel: IServerChannel<TContext>): void {
-		this.channelServer.registerChannel(channelName, channel);
+		if (this.channelServer) {
+			this.channelServer.registerChannel(channelName, channel);
+		} else {
+			this.ready.then(() => this.channelServer!.registerChannel(channelName, channel));
+		}
 	}
 
 	dispose(): void {
 		this.channelClient.dispose();
-		this.channelServer.dispose();
+		this.channelServer?.dispose();
+		this.isDisposed = true;
 	}
 }
 
@@ -1193,11 +1189,6 @@ export namespace ProxyChannel {
 	}
 }
 
-const colorTables = [
-	['#2977B1', '#FC802D', '#34A13A', '#D3282F', '#9366BA'],
-	['#8B564C', '#E177C0', '#7F7F7F', '#BBBE3D', '#2EBECD']
-];
-
 function prettyWithoutArrays(data: any): any {
 	if (Array.isArray(data)) {
 		return data;
@@ -1218,37 +1209,6 @@ function pretty(data: any): any {
 	return prettyWithoutArrays(data);
 }
 
-export function logWithColors(direction: string, totalLength: number, msgLength: number, req: number, initiator: RequestInitiator, str: string, data: any): void {
-	data = pretty(data);
-
-	const colorTable = colorTables[initiator];
-	const color = colorTable[req % colorTable.length];
-	let args = [`%c[${direction}]%c[${String(totalLength).padStart(7, ' ')}]%c[len: ${String(msgLength).padStart(5, ' ')}]%c${String(req).padStart(5, ' ')} - ${str}`, 'color: darkgreen', 'color: grey', 'color: grey', `color: ${color}`];
-	if (/\($/.test(str)) {
-		args = args.concat(data);
-		args.push(')');
-	} else {
-		args.push(data);
-	}
-	console.log.apply(console, args as [string, ...string[]]);
-}
-
-export class IPCLogger implements IIPCLogger {
-	private _totalIncoming = 0;
-	private _totalOutgoing = 0;
-
-	constructor(
-		private readonly _outgoingPrefix: string,
-		private readonly _incomingPrefix: string,
-	) { }
-
-	public logOutgoing(msgLength: number, requestId: number, initiator: RequestInitiator, str: string, data?: any): void {
-		this._totalOutgoing += msgLength;
-		logWithColors(this._outgoingPrefix, this._totalOutgoing, msgLength, requestId, initiator, str, data);
-	}
-
-	public logIncoming(msgLength: number, requestId: number, initiator: RequestInitiator, str: string, data?: any): void {
-		this._totalIncoming += msgLength;
-		logWithColors(this._incomingPrefix, this._totalIncoming, msgLength, requestId, initiator, str, data);
-	}
+function formatLogMessage(direction: string, msgLength: number, reqId: number, str: string, data?: any) {
+	return [`[${direction}]`, `[len: ${String(msgLength).padStart(7, ' ')}]`, String(reqId).padStart(5, ' '), ' - ', str, pretty(data)].join('');
 }

@@ -2,9 +2,9 @@
 
 
 import { app, BrowserWindow, ipcMain }  from 'electron';
-import path from 'path';
 import './services/ipc/main/ipc.main';
 import './services/update/main/update.main';
+import './services/log/common/log';
 // must be latest, other service should register first
 import { InstantiationService } from './services/instantiation/common/instantiation';
 
@@ -12,6 +12,8 @@ class Application {
 	private readonly instantiationService: InstantiationService = new InstantiationService();
 	startup() {
 		this.instantiationService.init();
+		const logService = this.instantiationService.getService('logService');
+		logService.log('app started');
 	}
 }
 

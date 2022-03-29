@@ -7,7 +7,8 @@ import { ipcRenderer } from 'electron';
 import { VSBuffer } from '../../../core/base/buffer';
 import { Event } from '../../../core/base/event';
 import { IDisposable } from '../../../core/base/lifecycle';
-import { service } from '../../instantiation/common/instantiation';
+import { inject, service } from '../../instantiation/common/instantiation';
+import { LogService } from '../../log/common/log';
 import { IPCClient } from '../common/ipc';
 import { Protocol as ElectronProtocol } from '../common/ipc';
 
@@ -27,10 +28,12 @@ export class IPCRendererClient extends IPCClient implements IDisposable {
 		return new ElectronProtocol(ipcRenderer, onMessage);
 	}
 
-	constructor() {
+	constructor(
+		@inject('logService')
+		logService: LogService,
+	) {
 		const protocol = IPCRendererClient.createProtocol();
-		super(protocol, Math.random().toString().slice(2, 8));
-
+		super(protocol, logService);
 		this.protocol = protocol;
 	}
 

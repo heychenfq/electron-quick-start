@@ -1,7 +1,8 @@
 
-import { ipcRenderer, contextBridge } from 'electron';
-import './services/ipc/preload/ipc.preload';
-import './services/update/preload/update.preload';
+import { contextBridge } from 'electron';
+import './services/ipc/sandbox/ipc.sandbox';
+import './services/update/sandbox/update.sandbox';
+import './services/log/common/log';
 import { InstantiationService } from './services/instantiation/common/instantiation';
 import { Event } from './core/base/event';
 
@@ -10,11 +11,17 @@ class Application {
 	startup() {
 		this.instantiationService.init();
 		exposeInMainWorld('nativeHost', {
-			setTitle: (title: string) => ipcRenderer.send('set-title', title),
-			appInfo: {
-				nodeVersion: process.versions['node'],
-				chromeVersion: process.versions['chrome'],
-				electronVersion: process.versions['electron'],
+			process: {
+				platform: process.platform,
+				arch: process.arch,
+				env: process.env,
+				versions: {
+					electron: process.versions.electron,
+					node: process.versions.node,
+					chrome: process.versions.chrome,
+				},
+				type: process.type,
+				cwd: () => process.cwd(),
 			},
 			call: <R>(service: string, method: string, ...args: any[]): R => {
 				const serviceInstance = this.instantiationService.getService(service);

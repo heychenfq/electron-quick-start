@@ -6,6 +6,7 @@ import { IpcMainServer } from '../../ipc/main/ipc.main';
 import { inject, service } from '../../instantiation/common/instantiation';
 import { IServerChannel } from '../../ipc/common/ipc';
 import { UpdateCommands, UpdateEvents } from '../common/update';
+import { LogService } from '../../log/common/log';
 
 autoUpdater.allowDowngrade = false;
 autoUpdater.allowPrerelease = true;
@@ -38,21 +39,20 @@ export class UpdateMainService extends Disposable {
 	constructor(
 		@inject('ipcMainServer')
 		private readonly ipcMainServer: IpcMainServer,
+		@inject('logService')
+		logService: LogService,
 	) {
 		super();
+		autoUpdater.logger = logService;
 		this.#registerIPCServerChannel();
 	}
 
-	async checkForUpdates() {
-		const result = await autoUpdater.checkForUpdates();
-		console.log(result);
-		return result;
+	checkForUpdates() {
+		return autoUpdater.checkForUpdates();
 	}
 
-	async checkForUpdatesAndNotify() {
-		const result = await autoUpdater.checkForUpdatesAndNotify();
-		console.log(result);
-		return result;
+	checkForUpdatesAndNotify() {
+		return autoUpdater.checkForUpdatesAndNotify();
 	}
 
 	#registerIPCServerChannel() {

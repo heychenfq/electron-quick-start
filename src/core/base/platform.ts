@@ -19,12 +19,6 @@ let _language: string = LANGUAGE_DEFAULT;
 let _translationsConfigFile: string | undefined = undefined;
 let _userAgent: string | undefined = undefined;
 
-interface NLSConfig {
-	locale: string;
-	availableLanguages: { [key: string]: string };
-	_translationsConfigFile: string;
-}
-
 export interface IProcessEnvironment {
 	[key: string]: string | undefined;
 }
@@ -55,11 +49,12 @@ declare const self: unknown;
 export const globals: any = (typeof self === 'object' ? self : typeof global === 'object' ? global : {});
 
 let nodeProcess: INodeProcess | undefined = undefined;
-if (typeof globals.vscode !== 'undefined' && typeof globals.vscode.process !== 'undefined') {
-	// Native environment (sandboxed)
-	nodeProcess = globals.vscode.process;
-} else if (typeof process !== 'undefined') {
-	// Native environment (non-sandboxed)
+// Native environment (non-sandboxed)
+if (typeof nativeHost !== 'undefined') {
+	nodeProcess = nativeHost.process;
+}
+// Native environment (non-sandboxed)
+else if (typeof process !== 'undefined') {
 	nodeProcess = process;
 }
 
@@ -93,21 +88,9 @@ else if (typeof nodeProcess === 'object') {
 	_isLinux = (nodeProcess.platform === 'linux');
 	_isLinuxSnap = _isLinux && !!nodeProcess.env['SNAP'] && !!nodeProcess.env['SNAP_REVISION'];
 	_isElectron = isElectronProcess;
-	_isCI = !!nodeProcess.env['CI'] || !!nodeProcess.env['BUILD_ARTIFACTSTAGINGDIRECTORY'];
+	_isCI = !!nodeProcess.env['CI'];
 	_locale = LANGUAGE_DEFAULT;
 	_language = LANGUAGE_DEFAULT;
-	const rawNlsConfig = nodeProcess.env['VSCODE_NLS_CONFIG'];
-	if (rawNlsConfig) {
-		try {
-			const nlsConfig: NLSConfig = JSON.parse(rawNlsConfig);
-			const resolved = nlsConfig.availableLanguages['*'];
-			_locale = nlsConfig.locale;
-			// VSCode's default language is 'en'
-			_language = resolved ? resolved : LANGUAGE_DEFAULT;
-			_translationsConfigFile = nlsConfig._translationsConfigFile;
-		} catch (e) {
-		}
-	}
 	_isNative = true;
 }
 

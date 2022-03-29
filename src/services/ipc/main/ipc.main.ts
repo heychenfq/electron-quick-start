@@ -7,7 +7,8 @@ import { ipcMain, WebContents } from 'electron';
 import { VSBuffer } from '../../../core/base/buffer';
 import { Emitter, Event } from '../../../core/base/event';
 import { IDisposable, toDisposable } from '../../../core/base/lifecycle';
-import { service } from '../../instantiation/common/instantiation';
+import { inject, service } from '../../instantiation/common/instantiation';
+import { LogService } from '../../log/common/log';
 import { ClientConnectionEvent, IPCServer, Protocol } from '../common/ipc';
 
 interface IIPCEvent {
@@ -31,9 +32,8 @@ export class IpcMainServer extends IPCServer {
 
 	private static readonly Clients = new Map<number, IDisposable>();
 
-	private static getOnDidClientConnect(): Event<ClientConnectionEvent> {
+	private static getOnDidClientConnect(): Event<ClientConnectionEvent<string>> {
 		const onHello = Event.fromNodeEventEmitter<WebContents>(ipcMain, 'vscode:hello', ({ sender }) => sender);
-
 		return Event.map(onHello, webContents => {
 			const id = webContents.id;
 			const client = IpcMainServer.Clients.get(id);
@@ -49,11 +49,14 @@ export class IpcMainServer extends IPCServer {
 			const onDidClientDisconnect = Event.any(Event.signal(createScopedOnMessageEvent(id, 'vscode:disconnect')), onDidClientReconnect.event);
 			const protocol = new Protocol(webContents, onMessage);
 
-			return { protocol, onDidClientDisconnect };
+			return { protocol, onDidClientDisconnect, ctx: id.toString() };
 		});
 	}
 
-	constructor() {
-		super(IpcMainServer.getOnDidClientConnect());
+	constructor(
+		@inject('logService')
+		logService: LogService,
+	) {
+		super(IpcMainServer.getOnDidClientConnect(), logService);
 	}
 }

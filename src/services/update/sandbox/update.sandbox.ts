@@ -1,7 +1,7 @@
 import { UpdateInfo } from "electron-updater";
 import { inject, service } from "../../instantiation/common/instantiation";
 import { IChannel } from "../../ipc/common/ipc";
-import { IPCRendererClient } from "../../ipc/preload/ipc.preload";
+import { IPCRendererClient } from "../../ipc/sandbox/ipc.sandbox";
 import { UpdateCommands, UpdateEvents } from "../common/update";
 
 @service('updateService')
