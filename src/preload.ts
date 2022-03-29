@@ -3,6 +3,7 @@ import { ipcRenderer, contextBridge } from 'electron';
 import './services/ipc/preload/ipc.preload';
 import './services/update/preload/update.preload';
 import { InstantiationService } from './services/instantiation/common/instantiation';
+import { Event } from './core/base/event';
 
 class Application {
 	private readonly instantiationService: InstantiationService = new InstantiationService();
@@ -15,14 +16,22 @@ class Application {
 				chromeVersion: process.versions['chrome'],
 				electronVersion: process.versions['electron'],
 			},
-			call: <R>(service: string, method: string, ...args: any): R => {
+			call: <R>(service: string, method: string, ...args: any[]): R => {
 				const serviceInstance = this.instantiationService.getService(service);
-				const serviceMethod = serviceInstance[method]
+				const serviceMethod = serviceInstance[method];
 				if (!serviceMethod) {
 					throw new Error(`service ${service} has not method ${method}`);
 				}
 				return serviceMethod.apply(serviceInstance, args);
-			}
+			},
+			on: <T>(service: string, event: string, ...args: any[]): Event<T> => {
+				const serviceInstance = this.instantiationService.getService(service);
+				const serviceEvent = serviceInstance[event];
+				if (!serviceEvent) {
+					throw new Error(`service ${service} has not event ${event}`);
+				}
+				return serviceEvent.apply(serviceInstance, args);
+			},
 		});
 	}
 }

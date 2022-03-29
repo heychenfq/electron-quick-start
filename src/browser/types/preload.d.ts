@@ -6,5 +6,6 @@ declare namespace nativeHost {
     chromeVersion: string;
     electronVersion: string;
   };
-	let call = <R>(service: string, method: string, ...args: any[]) => R;
+	function call<R>(service: string, method: string, ...args: any[]): R;
+	function on<T>(service: string, event: string, ...args: any[]): any;
 }

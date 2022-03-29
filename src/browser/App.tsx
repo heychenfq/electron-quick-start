@@ -1,5 +1,6 @@
 
 import { FC, useCallback } from 'react';
+import Update from './components/update/update';
 
 const App: FC = () => {
 	const handleSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
@@ -21,6 +22,7 @@ const App: FC = () => {
 				</label>
 				<button type="submit">set title</button>
 			</form>
+			<Update />
 		</div>
 	)
 };

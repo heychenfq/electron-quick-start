@@ -1,3 +1,4 @@
+import { UpdateInfo } from "electron-updater";
 import { inject, service } from "../../instantiation/common/instantiation";
 import { IChannel } from "../../ipc/common/ipc";
 import { IPCRendererClient } from "../../ipc/preload/ipc.preload";
@@ -13,8 +14,28 @@ export class UpdateService {
 		this.channel = ipcRendererClient.getChannel('updateService');
 	}
 
+	onError() {
+		return this.channel.listen<Error>(UpdateEvents.ERROR);
+	}
+
 	onCheckingForUpdate() {
 		return this.channel.listen<void>(UpdateEvents.CHECKING_FOR_UPDATE);
+	}
+
+	onUpdateAvailable() {
+		return this.channel.listen<UpdateInfo>(UpdateEvents.UPDATE_AVAILABLE);
+	}
+
+	onUpdateNotAvailable() {
+		return this.channel.listen<UpdateInfo>(UpdateEvents.UPDATE_NOT_AVAILABLE);
+	}
+
+	onDownloadProgress() {
+		return this.channel.listen<UpdateInfo>(UpdateEvents.DOWNLOAD_PROGRESS);
+	}
+
+	onUpdateDownloaded() {
+		return this.channel.listen<UpdateInfo>(UpdateEvents.UPDATE_DOWNLOADED);
 	}
 
 	checkForUpdates() {
