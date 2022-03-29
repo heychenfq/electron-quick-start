@@ -21,5 +21,8 @@
     "externalHelpers": true,
     "keepClassNames": true,
 		"baseUrl": "../src"
-  }
+  },
+	"module": {
+		"type": "commonjs"
+	}
 }

@@ -1,12 +1,13 @@
 
-import { Configuration } from 'webpack';
-import path from 'path';
-import HtmlWebpackPlugin from 'html-webpack-plugin';
+const path = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
-const baseConfig: Configuration = {
+const baseConfig = {
 	entry: {
+		preload: './src/preload',
 		main: './src/browser/index',
 	},
+	target: 'electron-renderer',
 	output: {
 		path: path.resolve(__dirname, '../output/browser'),
 	},
@@ -31,7 +32,8 @@ const baseConfig: Configuration = {
 	plugins: [
     new HtmlWebpackPlugin({
       title: 'Electron App',
-			template: 'src/browser/index.html'
+			template: 'src/browser/index.html',
+			
     }),
   ],
 	optimization: {
@@ -49,4 +51,4 @@ const baseConfig: Configuration = {
 	},
 };
 
-export default baseConfig;
+module.exports = baseConfig;

@@ -1,8 +1,7 @@
 
-import { Configuration } from 'webpack';
-import path from 'path';
+const path = require('path');
 
-const config: Configuration = {
+const config = {
 	mode: 'production',
 	entry: './src/preload',
 	target: 'electron-preload',
@@ -29,4 +28,4 @@ const config: Configuration = {
   },
 }
 
-export default config;
+module.exports = config;

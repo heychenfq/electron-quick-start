@@ -1,7 +1,21 @@
-import { updateService } from "./services/updater/main/updater.main";
 
-const { app, BrowserWindow, ipcMain } = require('electron');
-const path = require('path');
+
+
+import { app, BrowserWindow, ipcMain }  from 'electron';
+import path from 'path';
+import './services/ipc/main/ipc.main';
+import './services/update/main/update.main';
+// must be latest, other service should register first
+import { InstantiationService } from './services/instantiation/common/instantiation';
+
+class Application {
+	private readonly instantiationService: InstantiationService = new InstantiationService();
+	startup() {
+		this.instantiationService.init();
+	}
+}
+
+new Application().startup();
 
 const isDev = !app.isPackaged;
 const APP_ROOT = app.getAppPath();
@@ -9,7 +23,9 @@ const APP_ROOT = app.getAppPath();
 function createWindow () {
   const mainWindow = new BrowserWindow({
     webPreferences: {
-      preload: path.resolve(__dirname, isDev ? '../output/preload.js' : './preload.js'),
+      // preload: path.resolve(__dirname, isDev ? '../output/preload.js' : './preload.js'),
+			contextIsolation: false,
+			nodeIntegration: true,
     },
   });
 
@@ -24,7 +40,6 @@ function createWindow () {
 
 app.whenReady().then(() => {
   createWindow()
-  updateService.checkForUpdatesAndNotify();
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   });

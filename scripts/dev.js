@@ -1,11 +1,12 @@
 
-import webpack from 'webpack';
-import WebpackDevServer from 'webpack-dev-server';
-import preloadWebpackConfig from '../config/webpack.config.preload.dev';
-import browserWebpackConfig from '../config/webpack.config.dev';
+const webpack = require('webpack');
+const WebpackDevServer = require('webpack-dev-server');
+// const preloadWebpackConfig = require('../config/webpack.config.preload.dev');
+const browserWebpackConfig = require('../config/webpack.config.dev');
 
 const runServer = async () => {
-	const compiler = webpack([browserWebpackConfig, preloadWebpackConfig]);
+	// const compiler = webpack([browserWebpackConfig, preloadWebpackConfig]);
+	const compiler = webpack(browserWebpackConfig);
 	const devServerOptions = { 
 		devMiddleware: {
 			writeToDisk: true,

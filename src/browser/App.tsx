@@ -4,15 +4,15 @@ import { FC, useCallback } from 'react';
 const App: FC = () => {
 	const handleSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		electronAPI.setTitle((e.target as any).title.value);
+		nativeHost.setTitle((e.target as any).title.value);
 	}, []);
 	return (
 		<div>
 			<h1>Hello Electron!</h1>
 			<div>
-				<div>electron version: {electronAPI.appInfo.electronVersion}</div>
-				<div>node version: {electronAPI.appInfo.nodeVersion}</div>
-				<div>chrome version: {electronAPI.appInfo.chromeVersion}</div>
+				<div>electron version: {nativeHost.appInfo.electronVersion}</div>
+				<div>node version: {nativeHost.appInfo.nodeVersion}</div>
+				<div>chrome version: {nativeHost.appInfo.chromeVersion}</div>
 			</div>
 			<form onSubmit={handleSubmit}>
 				<label>

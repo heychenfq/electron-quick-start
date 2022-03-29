@@ -4,9 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ipcRenderer } from 'electron';
-import { VSBuffer } from '../../base/buffer';
-import { Event } from '../../base/event';
-import { IDisposable } from '../../base/lifecycle';
+import { VSBuffer } from '../../../core/base/buffer';
+import { Event } from '../../../core/base/event';
+import { IDisposable } from '../../../core/base/lifecycle';
+import { service } from '../../instantiation/common/instantiation';
 import { IPCClient } from '../common/ipc';
 import { Protocol as ElectronProtocol } from '../common/ipc';
 
@@ -14,7 +15,8 @@ import { Protocol as ElectronProtocol } from '../common/ipc';
  * An implementation of `IPCClient` on top of Electron `ipcRenderer` IPC communication
  * provided from sandbox globals (via preload script).
  */
-export class Client extends IPCClient implements IDisposable {
+@service('ipcRendererClient')
+export class IPCRendererClient extends IPCClient implements IDisposable {
 
 	private protocol: ElectronProtocol;
 
@@ -25,9 +27,9 @@ export class Client extends IPCClient implements IDisposable {
 		return new ElectronProtocol(ipcRenderer, onMessage);
 	}
 
-	constructor(id: string) {
-		const protocol = Client.createProtocol();
-		super(protocol, id);
+	constructor() {
+		const protocol = IPCRendererClient.createProtocol();
+		super(protocol, Math.random().toString().slice(2, 8));
 
 		this.protocol = protocol;
 	}

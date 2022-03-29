@@ -1,14 +1,17 @@
-import path from 'path';
-import { readFileSync, writeFileSync } from 'fs';
-import webpack from 'webpack';
-import prettier from 'prettier';
-import browserWebpackConfig from '../config/webpack.config.prod';
-import preloadWebpackConfig from '../config/webpack.config.preload';
-import { spawn } from 'child_process';
+const path = require('path');
+const { readFileSync, writeFileSync } = require('fs');
+const webpack = require('webpack');
+const prettier = require('prettier');
+const browserWebpackConfig = require('../config/webpack.config.prod');
+// const preloadWebpackConfig = require('../config/webpack.config.preload');
+const { spawn } = require('child_process');
 
 const buildRenderer = () => {
-	return new Promise<void>((resolve, reject) => {
-		webpack([browserWebpackConfig, preloadWebpackConfig], (err: any, stats: any) => {
+	return new Promise((resolve, reject) => {
+		webpack([
+			browserWebpackConfig, 
+			// preloadWebpackConfig,
+		], (err, stats) => {
 			if (err) {
 				reject(err);
 				return;
@@ -23,7 +26,7 @@ const buildRenderer = () => {
 };
 
 const buildMain = () => {
-	return new Promise<void>((resolve, reject) => {
+	return new Promise((resolve, reject) => {
 		const swcBin = process.platform === 'win32' ? 'swc.CMD' : 'swc';
 		const tscCompiler = spawn(swcBin, [
 			path.resolve(__dirname, '../src'),

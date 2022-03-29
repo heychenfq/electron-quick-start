@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { getRandomElement } from '../../base/arrays';
-import { CancelablePromise, createCancelablePromise, timeout } from '../../base/async';
-import { VSBuffer } from '../../base/buffer';
-import { CancellationToken, CancellationTokenSource } from '../../base/cancellation';
-import { memoize } from '../../base/decorators';
-import * as errors from '../../base/errors';
-import { Emitter, Event, EventMultiplexer, Relay } from '../../base/event';
-import { combinedDisposable, DisposableStore, dispose, IDisposable, toDisposable } from '../../base/lifecycle';
-import { revive } from '../../base/marshalling';
-import * as strings from '../../base/strings';
-import { isFunction, isUndefinedOrNull } from '../../base/types';
+import { getRandomElement } from '../../../core/base/arrays';
+import { CancelablePromise, createCancelablePromise, timeout } from '../../../core/base/async';
+import { VSBuffer } from '../../../core/base/buffer';
+import { CancellationToken, CancellationTokenSource } from '../../../core/base/cancellation';
+import { memoize } from '../../../core/base/decorators';
+import * as errors from '../../../core/base/errors';
+import { Emitter, Event, EventMultiplexer, Relay } from '../../../core/base/event';
+import { combinedDisposable, DisposableStore, dispose, IDisposable, toDisposable } from '../../../core/base/lifecycle';
+import { revive } from '../../../core/base/marshalling';
+import * as strings from '../../../core/base/strings';
+import { isFunction, isUndefinedOrNull } from '../../../core/base/types';
 
 /**
  * An `IChannel` is an abstraction over a collection of commands.
