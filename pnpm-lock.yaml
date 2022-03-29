@@ -10,6 +10,7 @@ specifiers:
   '@types/react-dom': ^17.0.13
   electron: ^17.1.2
   electron-builder: ^23.0.3
+  electron-updater: ^4.6.5
   html-webpack-plugin: ^5.5.0
   prettier: ^2.6.0
   react: ^17.0.2
@@ -37,6 +38,7 @@ devDependencies:
   '@types/react-dom': 17.0.13
   electron: 17.1.2
   electron-builder: 23.0.3
+  electron-updater: 4.6.5
   html-webpack-plugin: 5.5.0_webpack@5.70.0
   prettier: 2.6.0
   rimraf: 3.0.2
@@ -507,6 +509,10 @@ packages:
     resolution: {integrity: sha512-hppQEBDmlwhFAXKJX2KnWLYu5yMfi91yazPb2l+lbJiwW+wdo1gNeRA+3RgNSO39WYX2euey41KEwnqesU2Jew==}
     dev: true
 
+  /@types/semver/7.3.9:
+    resolution: {integrity: sha512-L/TMpyURfBkf+o/526Zb6kd/tchUP3iBDEPjqjb+U2MAJhVRxxrmr2fwpe08E7QsV7YLcpq0tUaQ9O9x97ZIxQ==}
+    dev: true
+
   /@types/serve-index/1.9.1:
     resolution: {integrity: sha512-d/Hs3nWDxNL2xAczmOVZNj92YZCS6RGxfBPjKzuu/XirCgXdpKEb88dYNbrYGint6IVWLNP+yonwVAuRC0T2Dg==}
     dependencies:
@@ -903,7 +909,7 @@ packages:
     optional: true
 
   /astral-regex/2.0.0:
-    resolution: {integrity: sha1-SDFDxWeu7UeFdZwIZXhtx319LjE=}
+    resolution: {integrity: sha512-Z7tMw1ytTXt5jqMcOP+OQteU1VuNK9Y02uuJtKQ1Sv69jXQKKg5cibLwGJow8yzZP+eAc18EmLGPal0bp36rvQ==}
     engines: {node: '>=8'}
     dev: true
     optional: true
@@ -1078,6 +1084,16 @@ packages:
       ieee754: 1.2.1
     dev: true
     optional: true
+
+  /builder-util-runtime/8.9.2:
+    resolution: {integrity: sha512-rhuKm5vh7E0aAmT6i8aoSfEjxzdYEFX7zDApK+eNgOhjofnWb74d9SRJv0H/8nsgOkos0TZ4zxW0P8J4N7xQ2A==}
+    engines: {node: '>=12.0.0'}
+    dependencies:
+      debug: 4.3.3
+      sax: 1.2.4
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
 
   /builder-util-runtime/9.0.0:
     resolution: {integrity: sha512-SkpEtSmTkREDHRJnxKEv43aAYp8sYWY8fxYBhGLBLOBIRXeaIp6Kv3lBgSD7uR8jQtC7CA659sqJrpSV6zNvSA==}
@@ -1757,6 +1773,21 @@ packages:
     resolution: {integrity: sha512-EVTZ+igi8x63pK4bPuA95PXIs2b2Cowi3WQwI9f9qManLiZJOD1Lash1J3W4TvvcUCcIR4o/rgi9o8UicXSO+w==}
     dev: true
 
+  /electron-updater/4.6.5:
+    resolution: {integrity: sha512-kdTly8O9mSZfm9fslc1mnCY+mYOeaYRy7ERa2Fed240u01BKll3aiupzkd07qKw69KvhBSzuHroIW3mF0D8DWA==}
+    dependencies:
+      '@types/semver': 7.3.9
+      builder-util-runtime: 8.9.2
+      fs-extra: 10.0.1
+      js-yaml: 4.1.0
+      lazy-val: 1.0.5
+      lodash.escaperegexp: 4.1.2
+      lodash.isequal: 4.5.0
+      semver: 7.3.5
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
   /electron/17.1.2:
     resolution: {integrity: sha512-hqKQaUIRWX5Y2eAD8FZINWD/e5TKdpkbBYbkcZmJS4Bd1PKQsaDVc9h5xoA8zZQkPymE9rss+swjRpAFurOPGQ==}
     engines: {node: '>= 8.6'}
@@ -2095,7 +2126,7 @@ packages:
     dev: true
 
   /fsevents/2.3.2:
-    resolution: {integrity: sha1-ilJveLj99GI7cJ4Ll1xSwkwC/Ro=}
+    resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
     requiresBuild: true
@@ -2182,7 +2213,7 @@ packages:
     dev: true
 
   /global-tunnel-ng/2.7.1:
-    resolution: {integrity: sha1-0DtRAt/eOmmRT17n2GdhyjXVfY8=}
+    resolution: {integrity: sha512-4s+DyciWBV0eK148wqXxcmVAbFVPqtc3sEtUE/GTQfuU80rySLcMhUmHKSHI7/LDj8q0gDYI1lIhRRB7ieRAqg==}
     engines: {node: '>=0.10'}
     requiresBuild: true
     dependencies:
@@ -2805,6 +2836,14 @@ packages:
     engines: {node: '>=8'}
     dependencies:
       p-locate: 4.1.0
+    dev: true
+
+  /lodash.escaperegexp/4.1.2:
+    resolution: {integrity: sha1-ZHYsSGGAglGKw99Mz11YhtriA0c=}
+    dev: true
+
+  /lodash.isequal/4.5.0:
+    resolution: {integrity: sha1-QVxEePK8wwEgwizhDtMib30+GOA=}
     dev: true
 
   /lodash/4.17.21:

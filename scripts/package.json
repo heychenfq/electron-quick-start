@@ -1,0 +1,20 @@
+{
+  "name": "electron-quick-start",
+  "version": "1.0.0",
+  "description": "practice electron app",
+  "author": "chenfuqiang<heychenfq.foxmail.com>",
+	"main": "./main.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/heychenfq/electron-quick-start.git"
+  },
+  "keywords": [],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/heychenfq/electron-quick-start/issues"
+  },
+  "homepage": "https://github.com/heychenfq/electron-quick-start#readme",
+  "dependencies": {
+    "@swc/helpers": "^0.3.8"
+  }
+}

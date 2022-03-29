@@ -23,4 +23,3 @@ win:
   target: "nsis"
 publish:
   provider: "github"
-  token: "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"
