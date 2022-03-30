@@ -334,7 +334,7 @@ export class ChannelServer<TContext = string> implements IChannelServer<TContext
 		switch (response.type) {
 			case ResponseType.Initialize: {
 				const msgLength = this.send([response.type]);
-				this.logger?.log(formatLogMessage('Server', msgLength, 0, responseTypeToStr(response.type)))
+				this.logger?.log(...formatLogMessage('Server', msgLength, 0, responseTypeToStr(response.type)))
 				return;
 			}
 
@@ -343,7 +343,7 @@ export class ChannelServer<TContext = string> implements IChannelServer<TContext
 			case ResponseType.EventFire:
 			case ResponseType.PromiseErrorObj: {
 				const msgLength = this.send([response.type, response.id], response.data);
-				this.logger?.log(formatLogMessage('Server', msgLength, response.id, responseTypeToStr(response.type), response.data));
+				this.logger?.log(...formatLogMessage('Server', msgLength, response.id, responseTypeToStr(response.type), response.data));
 				return;
 			}
 		}
@@ -374,16 +374,16 @@ export class ChannelServer<TContext = string> implements IChannelServer<TContext
 
 		switch (type) {
 			case RequestType.Promise:
-				this.logger?.log(formatLogMessage('Server', message.byteLength, header[1], `${requestTypeToStr(type)}: ${header[2]}.${header[3]}`, body));
+				this.logger?.log(...formatLogMessage('Server', message.byteLength, header[1], `${requestTypeToStr(type)}: ${header[2]}.${header[3]}`, body));
 				return this.onPromise({ type, id: header[1], channelName: header[2], name: header[3], arg: body });
 			case RequestType.EventListen:
-				this.logger?.log(formatLogMessage('Server', message.byteLength, header[1], `${requestTypeToStr(type)}: ${header[2]}.${header[3]}`, body));
+				this.logger?.log(...formatLogMessage('Server', message.byteLength, header[1], `${requestTypeToStr(type)}: ${header[2]}.${header[3]}`, body));
 				return this.onEventListen({ type, id: header[1], channelName: header[2], name: header[3], arg: body });
 			case RequestType.PromiseCancel:
-				this.logger?.log(formatLogMessage('Server', message.byteLength, header[1], `${requestTypeToStr(type)}`));
+				this.logger?.log(...formatLogMessage('Server', message.byteLength, header[1], `${requestTypeToStr(type)}`));
 				return this.disposeActiveRequest({ type, id: header[1] });
 			case RequestType.EventDispose:
-				this.logger?.log(formatLogMessage('Server', message.byteLength, header[1], `${requestTypeToStr(type)}`));
+				this.logger?.log(...formatLogMessage('Server', message.byteLength, header[1], `${requestTypeToStr(type)}`));
 				return this.disposeActiveRequest({ type, id: header[1] });
 		}
 	}
@@ -654,14 +654,14 @@ export class ChannelClient implements IChannelClient, IDisposable {
 			case RequestType.Promise:
 			case RequestType.EventListen: {
 				const msgLength = this.send([request.type, request.id, request.channelName, request.name], request.arg);
-				this.logger?.log(formatLogMessage('Client', msgLength, request.id, `${requestTypeToStr(request.type)}: ${request.channelName}.${request.name}`, request.arg));
+				this.logger?.log(...formatLogMessage('Client', msgLength, request.id, `${requestTypeToStr(request.type)}: ${request.channelName}.${request.name}`, request.arg));
 				return;
 			}
 
 			case RequestType.PromiseCancel:
 			case RequestType.EventDispose: {
 				const msgLength = this.send([request.type, request.id]);
-				this.logger?.log(formatLogMessage('Client', msgLength, request.id, requestTypeToStr(request.type)));
+				this.logger?.log(...formatLogMessage('Client', msgLength, request.id, requestTypeToStr(request.type)));
 				return;
 			}
 		}
@@ -692,13 +692,13 @@ export class ChannelClient implements IChannelClient, IDisposable {
 
 		switch (type) {
 			case ResponseType.Initialize:
-				this.logger?.log(formatLogMessage('Client', message.byteLength, 0, responseTypeToStr(type)));
+				this.logger?.log(...formatLogMessage('Client', message.byteLength, 0, responseTypeToStr(type)));
 				return this.onResponse({ type: header[0] });
 			case ResponseType.PromiseSuccess:
 			case ResponseType.PromiseError:
 			case ResponseType.EventFire:
 			case ResponseType.PromiseErrorObj:
-				this.logger?.log(formatLogMessage('Client', message.byteLength, header[1], responseTypeToStr(type), body));
+				this.logger?.log(...formatLogMessage('Client', message.byteLength, header[1], responseTypeToStr(type), body));
 				return this.onResponse({ type: header[0], id: header[1], data: body });
 		}
 	}
@@ -1210,5 +1210,5 @@ function pretty(data: any): any {
 }
 
 function formatLogMessage(direction: string, msgLength: number, reqId: number, str: string, data?: any) {
-	return [`[${direction}]`, `[len: ${String(msgLength).padStart(7, ' ')}]`, String(reqId).padStart(5, ' '), ' - ', str, pretty(data)].join('');
+	return [`[${direction}]`, `[len: ${String(msgLength).padStart(7, ' ')}]`, String(reqId).padStart(5, ' '), ' - ', str, pretty(data)];
 }
