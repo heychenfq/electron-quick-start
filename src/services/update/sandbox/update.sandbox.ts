@@ -11,7 +11,7 @@ export class UpdateService {
 		@inject('ipcRendererClient')
 		ipcRendererClient: IPCRendererClient,
 	) {
-		this.channel = ipcRendererClient.getChannel('updateService');
+		this.channel = ipcRendererClient.getChannel('update');
 	}
 
 	onError() {

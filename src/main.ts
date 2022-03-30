@@ -2,18 +2,17 @@
 
 
 import { app, BrowserWindow, ipcMain }  from 'electron';
-import './services/ipc/main/ipc.main';
-import './services/update/main/update.main';
-import './services/log/common/log';
-// must be latest, other service should register first
 import { InstantiationService } from './services/instantiation/common/instantiation';
+import { LifecyclePhase } from './services/lifecycle/common/lifecycle';
+import { LifecycleMainService } from './services/lifecycle/main/lifecycle.main';
+import './services/services.main';
 
 class Application {
 	private readonly instantiationService: InstantiationService = new InstantiationService();
 	startup() {
 		this.instantiationService.init();
-		const logService = this.instantiationService.getService('logService');
-		logService.log('app started');
+		const lifecycleMainService = this.instantiationService.getService<LifecycleMainService>('lifecycleMainService');
+		lifecycleMainService.phase = LifecyclePhase.Ready;
 	}
 }
 
@@ -45,8 +44,4 @@ app.whenReady().then(() => {
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   });
-});
-
-app.on('window-all-closed', function () {
-  if (process.platform !== 'darwin') app.quit()
 });

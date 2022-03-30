@@ -1,10 +1,8 @@
 
 import { contextBridge } from 'electron';
-import './services/ipc/sandbox/ipc.sandbox';
-import './services/update/sandbox/update.sandbox';
-import './services/log/common/log';
 import { InstantiationService } from './services/instantiation/common/instantiation';
 import { Event } from './core/base/event';
+import './services/services.preload';
 
 class Application {
 	private readonly instantiationService: InstantiationService = new InstantiationService();

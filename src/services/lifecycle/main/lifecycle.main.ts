@@ -1,75 +1,16 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow } from 'electron';
 import { Barrier, timeout } from '../../../core/base/async';
-import { Emitter } from '../../../core/base/event';
+import { Emitter, Event } from '../../../core/base/event';
 import { Disposable, DisposableStore } from '../../../core/base/lifecycle';
 import { isMacintosh, isWindows } from '../../../core/base/platform';
 import { cwd } from '../../../core/base/process';
 import { assertIsDefined } from '../../../core/base/types';
 import { inject, service } from '../../instantiation/common/instantiation';
+import { IServerChannel } from '../../ipc/common/ipc';
+import { IpcMainServer } from '../../ipc/main/ipc.main';
 import { LogService } from '../../log/common/log';
-import { IWindow, LoadReason, UnloadReason } from '../../windows/common/window';
-
-interface WindowLoadEvent {
-
-	/**
-	 * The window that is loaded to a new workspace.
-	 */
-	window: IWindow;
-
-	/**
-	 * More details why the window loads to a new workspace.
-	 */
-	reason: LoadReason;
-}
-
-export const enum ShutdownReason {
-
-	/**
-	 * The application exits normally.
-	 */
-	QUIT = 1,
-
-	/**
-	 * The application exits abnormally and is being
-	 * killed with an exit code (e.g. from integration
-	 * test run)
-	 */
-	KILL
-}
-
-export interface ShutdownEvent {
-
-	/**
-	 * More details why the application is shutting down.
-	 */
-	reason: ShutdownReason;
-
-	/**
-	 * Allows to join the shutdown. The promise can be a long running operation but it
-	 * will block the application from closing.
-	 */
-	join(promise: Promise<void>): void;
-}
-
-export const enum LifecycleMainPhase {
-
-	/**
-	 * The first phase signals that we are about to startup.
-	 */
-	Starting = 1,
-
-	/**
-	 * Services are ready and first window is about to open.
-	 */
-	Ready = 2,
-
-	/**
-	 * This phase signals a point in time after the window has opened
-	 * and is typically the best place to do work that is not required
-	 * for the window to open.
-	 */
-	AfterWindowOpen = 3
-}
+import { IWindow, UnloadReason } from '../../windows/common/window';
+import { LifecycleCommands, LifecyclePhase, WillShutdownEvent, ShutdownReason, WindowLoadEvent } from '../common/lifecycle';
 
 @service('lifecycleMainService')
 export class LifecycleMainService extends Disposable {
@@ -77,7 +18,7 @@ export class LifecycleMainService extends Disposable {
 	private readonly _onBeforeShutdown = this._register(new Emitter<void>());
 	readonly onBeforeShutdown = this._onBeforeShutdown.event;
 
-	private readonly _onWillShutdown = this._register(new Emitter<ShutdownEvent>());
+	private readonly _onWillShutdown = this._register(new Emitter<WillShutdownEvent>());
 	readonly onWillShutdown = this._onWillShutdown.event;
 
 	private readonly _onWillLoadWindow = this._register(new Emitter<WindowLoadEvent>());
@@ -92,11 +33,10 @@ export class LifecycleMainService extends Disposable {
 	private _wasRestarted: boolean = false;
 	get wasRestarted(): boolean { return this._wasRestarted; }
 
-	private _phase = LifecycleMainPhase.Starting;
-	get phase(): LifecycleMainPhase { return this._phase; }
+	private _phase = LifecyclePhase.Starting;
+	get phase(): LifecyclePhase { return this._phase; }
 
 	private readonly windowToCloseRequest = new Set<number>();
-	private oneTimeListenerTokenGenerator = 0;
 	private windowCounter = 0;
 
 	private pendingQuitPromise: Promise<boolean> | undefined = undefined;
@@ -106,20 +46,24 @@ export class LifecycleMainService extends Disposable {
 
 	private readonly mapWindowIdToPendingUnload = new Map<number, Promise<boolean>>();
 
-	private readonly phaseWhen = new Map<LifecycleMainPhase, Barrier>();
+	private readonly phaseWhen = new Map<LifecyclePhase, Barrier>();
 
 	constructor(
 		@inject('logService')
 		private readonly logService: LogService,
+		@inject('ipcMainServer')
+		private readonly ipcServer: IpcMainServer,
 	) {
 		super();
-		this.when(LifecycleMainPhase.Ready).then(() => this.registerListeners());
+		this.registerListeners();
+		this.registerChannel();
 	}
 
 	private registerListeners(): void {
+		const appListeners = new DisposableStore();
 		// before-quit: an event that is fired if application quit was
 		// requested but before any window was closed.
-		const beforeQuitListener = () => {
+		appListeners.add(Event.fromNodeEventEmitter(app, 'before-quit')(() => {
 			if (this._quitRequested) {
 				return;
 			}
@@ -137,13 +81,12 @@ export class LifecycleMainService extends Disposable {
 			if (isMacintosh && this.windowCounter === 0) {
 				this.fireOnWillShutdown(ShutdownReason.QUIT);
 			}
-		};
-		app.addListener('before-quit', beforeQuitListener);
+		}));
 
 		// window-all-closed: an event that only fires when the last window
 		// was closed. We override this event to be in charge if app.quit()
 		// should be called or not.
-		const windowAllClosedListener = () => {
+		appListeners.add(Event.fromNodeEventEmitter(app, 'window-all-close')(() => {
 			this.logService.log('Lifecycle#app.on(window-all-closed)');
 
 			// Windows/Linux: we quit when all windows have closed
@@ -151,12 +94,11 @@ export class LifecycleMainService extends Disposable {
 			if (this._quitRequested || !isMacintosh) {
 				app.quit();
 			}
-		};
-		app.addListener('window-all-closed', windowAllClosedListener);
+		}));
 
 		// will-quit: an event that is fired after all windows have been
 		// closed, but before actually quitting.
-		app.once('will-quit', e => {
+		Event.once(Event.fromNodeEventEmitter<Electron.Event>(app, 'will-quit'))((e) => {
 			this.logService.log('Lifecycle#app.on(will-quit)');
 
 			// Prevent the quit until the shutdown promise was resolved
@@ -174,11 +116,31 @@ export class LifecycleMainService extends Disposable {
 				// Quit again, this time do not prevent this, since our
 				// will-quit listener is only installed "once". Also
 				// remove any listener we have that is no longer needed
-				app.removeListener('before-quit', beforeQuitListener);
-				app.removeListener('window-all-closed', windowAllClosedListener);
+				appListeners.dispose();
 				app.quit();
 			});
 		});
+	}
+
+	private registerChannel() {
+		const serverChannel: IServerChannel = {
+			call: (_ctx, command, arg): Promise<any> => {
+				switch(command) {
+					case LifecycleCommands.QUIT:
+						return this.quit();
+					case LifecycleCommands.RELAUNCH:
+						return this.relaunch();
+					case LifecycleCommands.KILL:
+						return this.kill(arg[0]);
+					default:
+						throw new Error(`[lifecycle] comment ${command} not found`);
+				}
+			},
+			listen: (_ctx, _event, _arg) => {
+				throw new Error('[lifecycle] no available event');
+			},
+		};
+		this.ipcServer.registerChannel('lifecycle', serverChannel);
 	}
 
 	private fireOnWillShutdown(reason: ShutdownReason): Promise<void> {
@@ -194,7 +156,7 @@ export class LifecycleMainService extends Disposable {
 			reason,
 			join(promise) {
 				joiners.push(promise);
-			}
+			},
 		});
 
 		this.pendingWillShutdownPromise = (async () => {
@@ -210,7 +172,7 @@ export class LifecycleMainService extends Disposable {
 		return this.pendingWillShutdownPromise;
 	}
 
-	set phase(value: LifecycleMainPhase) {
+	set phase(value: LifecyclePhase) {
 		if (value < this.phase) {
 			throw new Error('Lifecycle cannot go backwards');
 		}
@@ -230,7 +192,7 @@ export class LifecycleMainService extends Disposable {
 		}
 	}
 
-	async when(phase: LifecycleMainPhase): Promise<void> {
+	async when(phase: LifecyclePhase): Promise<void> {
 		if (phase <= this._phase) {
 			return;
 		}
@@ -255,7 +217,8 @@ export class LifecycleMainService extends Disposable {
 
 		// Window Before Closing: Main -> Renderer
 		const win: BrowserWindow = assertIsDefined(window.win);
-		win.on('close', (e) => {
+
+		windowListeners.add(Event.fromNodeEventEmitter<Electron.Event>(win, 'close')((e) => {
 			// The window already acknowledged to be closed
 			const windowId = window.id;
 			if (this.windowToCloseRequest.has(windowId)) {
@@ -283,10 +246,10 @@ export class LifecycleMainService extends Disposable {
 				// No veto, close window now
 				window.close();
 			});
-		});
+		}));
 
 		// Window After Closing
-		win.on('closed', () => {
+		windowListeners.add(Event.fromNodeEventEmitter(win, 'closed')(() => {
 			this.logService.log(`Lifecycle#window.on('closed') - window ID ${window.id}`);
 
 			// update window count
@@ -301,7 +264,7 @@ export class LifecycleMainService extends Disposable {
 			if (this.windowCounter === 0 && (!isMacintosh || this._quitRequested)) {
 				this.fireOnWillShutdown(ShutdownReason.QUIT);
 			}
-		});
+		}));
 	}
 
 	async reload(window: IWindow): Promise<void> {
@@ -344,27 +307,18 @@ export class LifecycleMainService extends Disposable {
 		if (veto) {
 			this.logService.log(`Lifecycle#unload() - veto in renderer (window ID ${window.id})`);
 
-			return this.handleWindowUnloadVeto(veto);
+			// a veto resolves any pending quit with veto
+			this.resolvePendingQuitPromise(true /* veto */);
+
+			// a veto resets the pending quit request flag
+			this._quitRequested = false;
+			return true;
 		}
 
 		// finally if there are no vetos, unload the renderer
 		await this.onWillUnloadWindowInRenderer(window, windowUnloadReason);
 
 		return false;
-	}
-
-	private handleWindowUnloadVeto(veto: boolean): boolean {
-		if (!veto) {
-			return false; // no veto
-		}
-
-		// a veto resolves any pending quit with veto
-		this.resolvePendingQuitPromise(true /* veto */);
-
-		// a veto resets the pending quit request flag
-		this._quitRequested = false;
-
-		return true; // veto
 	}
 
 	private resolvePendingQuitPromise(veto: boolean): void {
@@ -376,32 +330,17 @@ export class LifecycleMainService extends Disposable {
 	}
 
 	private onBeforeUnloadWindowInRenderer(window: IWindow, reason: UnloadReason): Promise<boolean /* veto */> {
-		return new Promise<boolean>(resolve => {
-			const oneTimeEventToken = this.oneTimeListenerTokenGenerator++;
-			const okChannel = `vscode:ok${oneTimeEventToken}`;
-			const cancelChannel = `vscode:cancel${oneTimeEventToken}`;
-
-			ipcMain.once(okChannel, () => {
-				resolve(false); // no veto
-			});
-
-			ipcMain.once(cancelChannel, () => {
-				resolve(true); // veto
-			});
-
-			window.send('vscode:onBeforeUnload', { okChannel, cancelChannel, reason });
+		const channel = this.ipcServer.getChannel('lifecycle', (client) => {
+			return client.ctx === window.id.toString();
 		});
+		return channel.call(LifecycleCommands.HANDLE_BEFORE_SHUTDOWN, [reason]);
 	}
 
 	private onWillUnloadWindowInRenderer(window: IWindow, reason: UnloadReason): Promise<void> {
-		return new Promise<void>(resolve => {
-			const oneTimeEventToken = this.oneTimeListenerTokenGenerator++;
-			const replyChannel = `vscode:reply${oneTimeEventToken}`;
-
-			ipcMain.once(replyChannel, () => resolve());
-
-			window.send('vscode:onWillUnload', { replyChannel, reason });
+		const channel = this.ipcServer.getChannel('lifecycle', (client) => {
+			return client.ctx === window.id.toString();
 		});
+		return channel.call(LifecycleCommands.HANDLE_WILL_SHUTDOWN, [reason]);
 	}
 
 	quit(willRestart?: boolean): Promise<boolean /* veto */> {

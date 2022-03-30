@@ -64,7 +64,7 @@ export class UpdateMainService extends Disposable {
 					case UpdateCommands.CHECK_FOR_UPDATES_AND_NOTIFY:
 						return this.checkForUpdatesAndNotify();
 					default:
-						throw new Error(`[UpdateMainService] command: ${command} not found`);
+						throw new Error(`[update] command: ${command} not found`);
 				}
 			},
 			listen: (_ctx: string, event: string, _arg): Event<any> => {
@@ -86,6 +86,6 @@ export class UpdateMainService extends Disposable {
 				}
 			},
 		};
-		this.ipcMainServer.registerChannel('updateService', serverChannel);
+		this.ipcMainServer.registerChannel('update', serverChannel);
 	}
 }

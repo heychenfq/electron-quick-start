@@ -1,6 +1,7 @@
 
 import { FC } from 'react';
 import Update from './components/update/update';
+import Lifecycle from './components/lifecycle/lifecycle';
 
 const App: FC = () => {
 	return (
@@ -12,6 +13,7 @@ const App: FC = () => {
 				<div>chrome version: {nativeHost.process.versions.chrome}</div>
 			</div>
 			<Update />
+			<Lifecycle />
 		</div>
 	)
 };
