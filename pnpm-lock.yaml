@@ -5,7 +5,7 @@ specifiers:
   '@types/prettier': ^2.4.4
   '@types/react': ^17.0.40
   '@types/react-dom': ^17.0.13
-  electron: ^17.1.2
+  electron: ~18.0.2
   electron-builder: ^23.0.3
   electron-log: ^4.4.6
   electron-updater: ^4.6.5
@@ -37,7 +37,7 @@ devDependencies:
   '@types/prettier': 2.4.4
   '@types/react': 17.0.40
   '@types/react-dom': 17.0.13
-  electron: 17.1.2
+  electron: 18.0.2
   electron-builder: 23.0.3
   esbuild-loader: 2.18.0_webpack@5.70.0
   html-webpack-plugin: 5.5.0_webpack@5.70.0
@@ -296,8 +296,8 @@ packages:
     resolution: {integrity: sha512-iiUgKzV9AuaEkZqkOLDIvlQiL6ltuZd9tGcW3gwpnX8JbuiuhFlEGmmFXEXkN50Cvq7Os88IY2v0dkDqXYWVgA==}
     dev: true
 
-  /@types/node/14.18.12:
-    resolution: {integrity: sha512-q4jlIR71hUpWTnGhXWcakgkZeHa3CCjcQcnuzU8M891BAWA2jHiziiWEPEkdS5pFsz7H9HJiy8BrK7tBRNrY7A==}
+  /@types/node/16.11.26:
+    resolution: {integrity: sha512-GZ7bu5A6+4DtG7q9GsoHXy3ALcgeIHP4NnL0Vv2wu0uUB/yQex26v0tf6/na1mm0+bS9Uw+0DFex7aaKr2qawQ==}
     dev: true
 
   /@types/node/17.0.21:
@@ -1639,14 +1639,14 @@ packages:
       - supports-color
     dev: false
 
-  /electron/17.1.2:
-    resolution: {integrity: sha512-hqKQaUIRWX5Y2eAD8FZINWD/e5TKdpkbBYbkcZmJS4Bd1PKQsaDVc9h5xoA8zZQkPymE9rss+swjRpAFurOPGQ==}
+  /electron/18.0.2:
+    resolution: {integrity: sha512-7bFKptQDCQBMjjTJEXs0p0KiZPoY28fzq4GnYGorQt4NZJ0TAog8L0NxEkuSJHuIWC/siOUTX0C1H1tWO6KPKQ==}
     engines: {node: '>= 8.6'}
     hasBin: true
     requiresBuild: true
     dependencies:
       '@electron/get': 1.14.1
-      '@types/node': 14.18.12
+      '@types/node': 16.11.26
       extract-zip: 1.7.0
     transitivePeerDependencies:
       - supports-color
