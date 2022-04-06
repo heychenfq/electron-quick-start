@@ -15,9 +15,11 @@ const config = {
         test: /\.tsx?$/,
         exclude: /node_modules/,
 				use: [{
-					loader: 'swc-loader',
+					loader: 'esbuild-loader',
 					options: {
-						configFile: path.resolve(__dirname, 'swcrc.browser.json'),
+						target: 'es2018',
+						loader: 'tsx',
+						tsconfigRaw: require('../config/tsconfig.browser.json'),
 					},
 				}],
       },

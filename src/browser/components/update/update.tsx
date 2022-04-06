@@ -1,5 +1,5 @@
 import { UpdateInfo } from "electron-updater";
-import { FC, useCallback, useEffect, useState } from "react";
+import React, { FC, useCallback, useEffect, useState } from "react";
 
 const Update: FC = () => {
 

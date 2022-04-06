@@ -1,13 +1,14 @@
 {
 	"extends": "../tsconfig.json",
+	"include": [
+		"../src/**/*"
+	],
 	"exclude": [
-		"src/**/browser/**/*",
-		"src/**/preload/**/*",
-		"src/preload.ts"
+		"../src/**/browser/**/*",
+		"../src/**/*.sandbox.ts",
+		"../src/preload.ts"
 	],
 	"compilerOptions": {
 		"module": "commonjs",
-		"outDir": "../dist",
-		"rootDir": "../src",
 	}
 }

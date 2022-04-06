@@ -2,7 +2,7 @@
 import { contextBridge } from 'electron';
 import { InstantiationService } from './services/instantiation/common/instantiation';
 import { Event } from './core/base/event';
-import './services/services.preload';
+import './services/services.sandbox';
 
 class Application {
 	private readonly instantiationService: InstantiationService = new InstantiationService();

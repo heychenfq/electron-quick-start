@@ -1,8 +1,8 @@
 const path = require('path');
-const { register } = require('swc-register/dist/node');
-
-register({
-	configFile: path.resolve(__dirname, '../config/swcrc.electron.json'),
+const tsNode = require('ts-node');
+tsNode.register({
+	configFile: path.resolve(__dirname, '../config/tsconfig.electron.json'),
+	transpileOnly: true,
 });
 
 require('../src/main');

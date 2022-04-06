@@ -1,6 +1,10 @@
 {
 	"extends": "../tsconfig.json",
-	"include": ["src/browser/**/*"],
+	"include": [
+		"../src/**/browser/**/*",
+		"../src/**/*.sandbox.ts",
+		"../src/preload.ts"
+	],
 	"compilerOptions": {
 		"module": "esnext",
 		"jsx": "react",
