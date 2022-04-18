@@ -1,12 +1,12 @@
 
 const webpack = require('webpack');
 const WebpackDevServer = require('webpack-dev-server');
-// const preloadWebpackConfig = require('../config/webpack.config.preload.dev');
+const preloadWebpackConfig = require('../config/webpack.config.preload.dev');
 const browserWebpackConfig = require('../config/webpack.config.dev');
 
 const runServer = async () => {
-	// const compiler = webpack([browserWebpackConfig, preloadWebpackConfig]);
-	const compiler = webpack(browserWebpackConfig);
+	const compiler = webpack([browserWebpackConfig, preloadWebpackConfig]);
+	// const compiler = webpack(browserWebpackConfig);
 	const devServerOptions = { 
 		devMiddleware: {
 			writeToDisk: true,

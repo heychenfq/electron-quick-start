@@ -4,10 +4,10 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 const baseConfig = {
 	entry: {
-		preload: './src/preload',
+		// preload: './src/preload',
 		main: './src/browser/index',
 	},
-	target: 'electron-renderer',
+	// target: 'electron-renderer',
 	output: {
 		path: path.resolve(__dirname, '../output/browser'),
 	},
