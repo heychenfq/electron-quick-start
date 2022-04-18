@@ -2,6 +2,7 @@
 
 
 import { app, BrowserWindow, ipcMain }  from 'electron';
+import path from 'path';
 import { InstantiationService } from './services/instantiation/common/instantiation';
 import { LifecyclePhase } from './services/lifecycle/common/lifecycle';
 import { LifecycleMainService } from './services/lifecycle/main/lifecycle.main';
@@ -24,9 +25,7 @@ const APP_ROOT = app.getAppPath();
 function createWindow () {
   const mainWindow = new BrowserWindow({
     webPreferences: {
-      // preload: path.resolve(__dirname, isDev ? '../output/preload.js' : './preload.js'),
-			contextIsolation: false,
-			nodeIntegration: true,
+      preload: path.resolve(__dirname, isDev ? '../output/preload.js' : './preload.js'),
     },
   });
 

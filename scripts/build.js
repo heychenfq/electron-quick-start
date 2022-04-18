@@ -3,14 +3,14 @@ const { readFileSync, writeFileSync } = require('fs');
 const webpack = require('webpack');
 const prettier = require('prettier');
 const browserWebpackConfig = require('../config/webpack.config.prod');
-// const preloadWebpackConfig = require('../config/webpack.config.preload');
+const preloadWebpackConfig = require('../config/webpack.config.preload');
 const { spawn } = require('child_process');
 
 const buildRenderer = () => {
 	return new Promise((resolve, reject) => {
 		webpack([
 			browserWebpackConfig, 
-			// preloadWebpackConfig,
+			preloadWebpackConfig,
 		], (err, stats) => {
 			if (err) {
 				reject(err);

@@ -3,6 +3,7 @@ import { contextBridge } from 'electron';
 import { InstantiationService } from './services/instantiation/common/instantiation';
 import { Event } from './core/base/event';
 import './services/services.sandbox';
+import { UpdateService } from './services/update/sandbox/update.sandbox';
 
 class Application {
 	private readonly instantiationService: InstantiationService = new InstantiationService();
@@ -12,7 +13,6 @@ class Application {
 			process: {
 				platform: process.platform,
 				arch: process.arch,
-				env: process.env,
 				versions: {
 					electron: process.versions.electron,
 					node: process.versions.node,
@@ -21,6 +21,7 @@ class Application {
 				type: process.type,
 				cwd: () => process.cwd(),
 			},
+			updateService: this.instantiationService.getService<UpdateService>('updateService'),
 			call: <R>(service: string, method: string, ...args: any[]): R => {
 				const serviceInstance = this.instantiationService.getService(service);
 				const serviceMethod = serviceInstance[method];
