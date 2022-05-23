@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ipcRenderer } from 'electron';
+import { inject, service } from '@electron-tools/ioc';
 import { VSBuffer } from '../../../core/base/buffer';
 import { Event } from '../../../core/base/event';
 import { IDisposable } from '../../../core/base/lifecycle';
-import { inject, service } from '../../instantiation/common/instantiation';
 import { LogService } from '../../log/common/log';
 import { IPCClient } from '../common/ipc';
 import { Protocol as ElectronProtocol } from '../common/ipc';

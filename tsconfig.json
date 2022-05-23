@@ -1,12 +1,12 @@
 {
+	"include": ["src/**/*"],
   "compilerOptions": {
-    "target": "es2016",                                  
+    "target": "es2018",                                  
     "lib": ["ESNext", "dom"],                                        
     "jsx": "preserve",                              
     "experimentalDecorators": true,                  
     "rootDir": "src",                                 
     "moduleResolution": "node",                     
-    "noEmit": false,
 		"outDir": "output",                                   
     "newLine": "lf",                                
     "allowSyntheticDefaultImports": true,  
@@ -15,6 +15,7 @@
     "forceConsistentCasingInFileNames": true,            
     "strict": true,                                      
     "skipLibCheck": true,
-		"importHelpers": true
+		"importHelpers": true,
+		"sourceMap": true,
   }
 }

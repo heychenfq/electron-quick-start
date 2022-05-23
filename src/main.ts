@@ -3,7 +3,7 @@
 
 import { app, BrowserWindow, ipcMain }  from 'electron';
 import path from 'path';
-import { InstantiationService } from './services/instantiation/common/instantiation';
+import InstantiationService from '@electron-tools/ioc';
 import { LifecyclePhase } from './services/lifecycle/common/lifecycle';
 import { LifecycleMainService } from './services/lifecycle/main/lifecycle.main';
 import './services/services.main';
@@ -35,7 +35,7 @@ function createWindow () {
     win!.setTitle(title);
   });
 
-  mainWindow.loadURL(isDev ? 'http://localhost:8080/index.html' : `file://${APP_ROOT}/browser/index.html`);
+  mainWindow.loadURL(isDev ? 'http://localhost:3000/index.html' : `file://${APP_ROOT}/browser/index.html`);
 }
 
 app.whenReady().then(() => {

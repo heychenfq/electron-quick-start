@@ -1,31 +1,23 @@
 const path = require('path');
 const { readFileSync, writeFileSync } = require('fs');
-const webpack = require('webpack');
 const prettier = require('prettier');
-const browserWebpackConfig = require('../config/webpack.config.prod');
-const preloadWebpackConfig = require('../config/webpack.config.preload');
 const { spawn } = require('child_process');
+const esbuild = require('esbuild');
 
-const buildRenderer = () => {
-	return new Promise((resolve, reject) => {
-		webpack([
-			browserWebpackConfig, 
-			preloadWebpackConfig,
-		], (err, stats) => {
-			if (err) {
-				reject(err);
-				return;
-			}
-			console.log(stats.toString({
-				chunks: false,  // Makes the build much quieter
-				colors: true    // Shows colors in the console
-			}));
-			resolve();
-		});
+const buildPreload = async () => {
+	await esbuild.build({
+		entryPoints: ['src/preload.ts'],
+		platform: 'node',
+		outfile: 'output/preload.js',
+		bundle: true,
+		minify: true,
+		format: 'iife',
+		external: ['electron', 'electron-log', 'electron-updater'],
+		tsconfig: 'config/tsconfig.electron.json',
 	});
-};
+}
 
-const buildMain = () => {
+const buildMain = async () => {
 	return new Promise((resolve, reject) => {
 		const tscBin = process.platform === 'win32' ? 'tsc.cmd' : 'tsc';
 		const tscCompiler = spawn(tscBin, [
@@ -57,7 +49,7 @@ const generatePkg = () => {
 
 const run = async () => {
 	try {
-		await buildRenderer();
+		await buildPreload();
 		await buildMain();
 		await generatePkg();
 	} catch (err) {

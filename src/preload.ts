@@ -1,6 +1,6 @@
 
 import { contextBridge } from 'electron';
-import { InstantiationService } from './services/instantiation/common/instantiation';
+import InstantiationService from '@electron-tools/ioc';
 import { Event } from './core/base/event';
 import './services/services.sandbox';
 import { UpdateService } from './services/update/sandbox/update.sandbox';

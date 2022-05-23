@@ -3,7 +3,7 @@ import { memoize } from '../../../core/base/decorators';
 import { Event } from '../../../core/base/event';
 import { Disposable } from '../../../core/base/lifecycle';
 import { IpcMainServer } from '../../ipc/main/ipc.main';
-import { inject, service } from '../../instantiation/common/instantiation';
+import { inject, service } from '@electron-tools/ioc';
 import { IServerChannel } from '../../ipc/common/ipc';
 import { UpdateCommands, UpdateEvents } from '../common/update';
 import { LogService } from '../../log/common/log';

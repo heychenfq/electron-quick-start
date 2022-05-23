@@ -1,5 +1,5 @@
 
-import React, { FC } from 'react';
+import { FC } from 'react';
 import Update from './components/update/update';
 import Lifecycle from './components/lifecycle/lifecycle';
 

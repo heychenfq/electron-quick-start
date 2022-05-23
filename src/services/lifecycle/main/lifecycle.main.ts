@@ -1,16 +1,33 @@
 import { app, BrowserWindow } from 'electron';
+import { inject, service } from '@electron-tools/ioc';
 import { Barrier, timeout } from '../../../core/base/async';
 import { Emitter, Event } from '../../../core/base/event';
 import { Disposable, DisposableStore } from '../../../core/base/lifecycle';
 import { isMacintosh, isWindows } from '../../../core/base/platform';
 import { cwd } from '../../../core/base/process';
-import { assertIsDefined } from '../../../core/base/types';
-import { inject, service } from '../../instantiation/common/instantiation';
 import { IServerChannel } from '../../ipc/common/ipc';
 import { IpcMainServer } from '../../ipc/main/ipc.main';
 import { LogService } from '../../log/common/log';
-import { IWindow, UnloadReason } from '../../windows/common/window';
 import { LifecycleCommands, LifecyclePhase, WillShutdownEvent, ShutdownReason, WindowLoadEvent } from '../common/lifecycle';
+
+
+export const enum UnloadReason {
+
+	/**
+	 * The window is closed.
+	 */
+	CLOSE = 1,
+
+	/**
+	 * All windows unload because the application quits.
+	 */
+	QUIT = 2,
+
+	/**
+	 * The window is reloaded.
+	 */
+	RELOAD = 3,
+}
 
 @service('lifecycleMainService')
 export class LifecycleMainService extends Disposable {
@@ -24,7 +41,7 @@ export class LifecycleMainService extends Disposable {
 	private readonly _onWillLoadWindow = this._register(new Emitter<WindowLoadEvent>());
 	readonly onWillLoadWindow = this._onWillLoadWindow.event;
 
-	private readonly _onBeforeCloseWindow = this._register(new Emitter<IWindow>());
+	private readonly _onBeforeCloseWindow = this._register(new Emitter<BrowserWindow>());
 	readonly onBeforeCloseWindow = this._onBeforeCloseWindow.event;
 
 	private _quitRequested = false;
@@ -117,6 +134,8 @@ export class LifecycleMainService extends Disposable {
 				// will-quit listener is only installed "once". Also
 				// remove any listener we have that is no longer needed
 				appListeners.dispose();
+				// see https://github.com/electron/electron/issues/33643
+				(e.defaultPrevented as any) = false;
 				app.quit();
 			});
 		});
@@ -206,19 +225,16 @@ export class LifecycleMainService extends Disposable {
 		await barrier.wait();
 	}
 
-	registerWindow(window: IWindow): void {
+	registerWindow(window: BrowserWindow): void {
 		const windowListeners = new DisposableStore();
 
 		// track window count
 		this.windowCounter++;
 
 		// Window Will Load
-		windowListeners.add(window.onWillLoad(e => this._onWillLoadWindow.fire({ window, reason: e.reason })));
+		// windowListeners.add(window.onWillLoad(e => this._onWillLoadWindow.fire({ window, reason: e.reason })));
 
-		// Window Before Closing: Main -> Renderer
-		const win: BrowserWindow = assertIsDefined(window.win);
-
-		windowListeners.add(Event.fromNodeEventEmitter<Electron.Event>(win, 'close')((e) => {
+		windowListeners.add(Event.fromNodeEventEmitter<Electron.Event>(window, 'close')((e) => {
 			// The window already acknowledged to be closed
 			const windowId = window.id;
 			if (this.windowToCloseRequest.has(windowId)) {
@@ -249,7 +265,7 @@ export class LifecycleMainService extends Disposable {
 		}));
 
 		// Window After Closing
-		windowListeners.add(Event.fromNodeEventEmitter(win, 'closed')(() => {
+		windowListeners.add(Event.fromNodeEventEmitter(window, 'closed')(() => {
 			this.logService.log(`Lifecycle#window.on('closed') - window ID ${window.id}`);
 
 			// update window count
@@ -267,7 +283,7 @@ export class LifecycleMainService extends Disposable {
 		}));
 	}
 
-	async reload(window: IWindow): Promise<void> {
+	async reload(window: BrowserWindow): Promise<void> {
 		// Only reload when the window has not vetoed this
 		const veto = await this.unload(window, UnloadReason.RELOAD);
 		if (!veto) {
@@ -275,7 +291,7 @@ export class LifecycleMainService extends Disposable {
 		}
 	}
 
-	unload(window: IWindow, reason: UnloadReason): Promise<boolean /* veto */> {
+	unload(window: BrowserWindow, reason: UnloadReason): Promise<boolean /* veto */> {
 
 		// Ensure there is only 1 unload running at the same time
 		const pendingUnloadPromise = this.mapWindowIdToPendingUnload.get(window.id);
@@ -292,10 +308,10 @@ export class LifecycleMainService extends Disposable {
 		return unloadPromise;
 	}
 
-	private async doUnload(window: IWindow, reason: UnloadReason): Promise<boolean /* veto */> {
+	private async doUnload(window: BrowserWindow, reason: UnloadReason): Promise<boolean /* veto */> {
 
 		// Always allow to unload a window that is not yet ready
-		if (!window.isReady) {
+		if (window.isDestroyed()) {
 			return false;
 		}
 
@@ -329,14 +345,14 @@ export class LifecycleMainService extends Disposable {
 		}
 	}
 
-	private onBeforeUnloadWindowInRenderer(window: IWindow, reason: UnloadReason): Promise<boolean /* veto */> {
+	private onBeforeUnloadWindowInRenderer(window: BrowserWindow, reason: UnloadReason): Promise<boolean /* veto */> {
 		const channel = this.ipcServer.getChannel('lifecycle', (client) => {
 			return client.ctx === window.id.toString();
 		});
 		return channel.call(LifecycleCommands.HANDLE_BEFORE_SHUTDOWN, [reason]);
 	}
 
-	private onWillUnloadWindowInRenderer(window: IWindow, reason: UnloadReason): Promise<void> {
+	private onWillUnloadWindowInRenderer(window: BrowserWindow, reason: UnloadReason): Promise<void> {
 		const channel = this.ipcServer.getChannel('lifecycle', (client) => {
 			return client.ctx === window.id.toString();
 		});

@@ -1,7 +1,7 @@
 import { Barrier, disposableTimeout } from "../../../core/base/async";
 import { Emitter } from "../../../core/base/event";
 import { Disposable } from "../../../core/base/lifecycle";
-import { inject, service } from "../../instantiation/common/instantiation";
+import { inject, service } from "@electron-tools/ioc";
 import { IChannel, IServerChannel } from "../../ipc/common/ipc";
 import { IPCRendererClient } from "../../ipc/sandbox/ipc.sandbox";
 import { LogService } from "../../log/common/log";

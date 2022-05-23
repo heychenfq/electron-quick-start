@@ -1,6 +1,6 @@
 
 import log from 'electron-log';
-import { service } from '../../instantiation/common/instantiation';
+import { service } from '@electron-tools/ioc';
 
 @service('logService')
 export class LogService {

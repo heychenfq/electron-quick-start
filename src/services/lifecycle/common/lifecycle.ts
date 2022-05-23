@@ -1,13 +1,25 @@
 
+import { BrowserWindow } from 'electron';
 import { isThenable } from '../../../core/base/async';
-import { IWindow, LoadReason } from '../../windows/common/window';
 
+export const enum LoadReason {
+
+	/**
+	 * The window is loaded for the first time.
+	 */
+	INITIAL = 1,
+
+	/**
+	 * The window is reloaded.
+	 */
+	RELOAD = 2,
+}
 export interface WindowLoadEvent {
 
 	/**
 	 * The window that is loaded to a new workspace.
 	 */
-	window: IWindow;
+	window: BrowserWindow;
 
 	/**
 	 * More details why the window loads to a new workspace.
