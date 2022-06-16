@@ -1,5 +1,12 @@
-
+import InstantiationService from '@electron-tools/ioc';
+import { ElectronIPCMain } from '@electron-tools/ipc';
 import './log/common/log';
-import './ipc/main/ipc.main';
 import './update/main/update.main';
-import './lifecycle/main/lifecycle.main';
+
+export class Application {
+	private readonly instantiationService: InstantiationService = new InstantiationService();
+	startup() {
+		this.instantiationService.registerService('ipcMain', new ElectronIPCMain())
+		this.instantiationService.init();
+	}
+}

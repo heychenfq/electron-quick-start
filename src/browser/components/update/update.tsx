@@ -5,52 +5,73 @@ const Update: FC = () => {
 
 	const [state, setState] = useState<string>('idle');
 
-	const checkForUpdate = useCallback(() => {
-		nativeHost.call('updateService', 'checkForUpdates');
+	const checkForUpdate = useCallback(async () => {
+		const updateInfo = await bridge.call<UpdateInfo>('updateService', 'checkForUpdates');
+		setState(Reflect.ownKeys(updateInfo).map((key: string | Symbol) => {
+			return `${key}: ${updateInfo[key as keyof UpdateInfo]}`;
+		}).join('\n'));
 	}, []);
 
 	useEffect(() => {
-		return nativeHost.on('updateService', 'onError')((error: any) => {
+		const subscription = bridge.on('updateService', 'onError').subscribe((error: any) => {
 			setState(error.code);
 		});
+		return () => {
+			subscription.unsubscribe();
+		}
 	}, []);
 	
 	useEffect(() => {
-		return nativeHost.on('updateService', 'onCheckingForUpdate')(() => {
+		const subscription = bridge.on('updateService', 'onCheckingForUpdate').subscribe(() => {
 			setState('checking update');
 		});
+		return () => {
+			subscription.unsubscribe();
+		}
 	}, []);
 
 	useEffect(() => {
-		return nativeHost.on('updateService', 'onUpdateAvailable')((updateInfo: UpdateInfo) => {
+		const subscription = bridge.on('updateService', 'onUpdateAvailable').subscribe((updateInfo: UpdateInfo) => {
 			setState(Reflect.ownKeys(updateInfo).map((key: string | Symbol) => {
 				return `${key}: ${updateInfo[key as keyof UpdateInfo]}`;
 			}).join('\n'));
 		});
+		return () => {
+			subscription.unsubscribe();
+		};
 	}, []);
 	
 	useEffect(() => {
-		return nativeHost.on('updateService', 'onUpdateNotAvailable')((updateInfo: UpdateInfo) => {
+		const subscription = bridge.on('updateService', 'onUpdateNotAvailable').subscribe((updateInfo: UpdateInfo) => {
 			setState(Reflect.ownKeys(updateInfo).map((key: string | Symbol) => {
 				return `${key}: ${updateInfo[key as keyof UpdateInfo]}`;
 			}).join('\n'));
 		});
+		return () => {
+			subscription.unsubscribe();
+		}
 	}, []);
 	
 	useEffect(() => {
-		return nativeHost.on('updateService', 'onDownloadProgress')((updateInfo: UpdateInfo) => {
+		const subscription = bridge.on('updateService', 'onDownloadProgress').subscribe((updateInfo: UpdateInfo) => {
 			setState(Reflect.ownKeys(updateInfo).map((key: string | Symbol) => {
 				return `${key}: ${updateInfo[key as keyof UpdateInfo]}`;
 			}).join('\n'));
 		});
+		return () => {
+			subscription.unsubscribe();
+		};
 	}, []);
 	
 	useEffect(() => {
-		return nativeHost.on('updateService', 'onUpdateDownloaded')((updateInfo: UpdateInfo) => {
+		const subscription = bridge.on('updateService', 'onUpdateDownloaded').subscribe((updateInfo: UpdateInfo) => {
 			setState(Reflect.ownKeys(updateInfo).map((key: string | Symbol) => {
 				return `${key}: ${updateInfo[key as keyof UpdateInfo]}`;
 			}).join('\n'));
 		});
+		return () => {
+			subscription.unsubscribe();
+		};
 	}, []);
 
 	return (

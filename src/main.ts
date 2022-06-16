@@ -3,21 +3,8 @@
 
 import { app, BrowserWindow, ipcMain }  from 'electron';
 import path from 'path';
-import InstantiationService from '@electron-tools/ioc';
-import { LifecyclePhase } from './services/lifecycle/common/lifecycle';
-import { LifecycleMainService } from './services/lifecycle/main/lifecycle.main';
-import './services/services.main';
 
-class Application {
-	private readonly instantiationService: InstantiationService = new InstantiationService();
-	startup() {
-		this.instantiationService.init();
-		const lifecycleMainService = this.instantiationService.getService<LifecycleMainService>('lifecycleMainService');
-		lifecycleMainService.phase = LifecyclePhase.Ready;
-	}
-}
-
-new Application().startup();
+import { Application } from './services/services.main';
 
 const isDev = !app.isPackaged;
 const APP_ROOT = app.getAppPath();
@@ -39,6 +26,7 @@ function createWindow () {
 }
 
 app.whenReady().then(() => {
+	new Application().startup();
   createWindow()
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

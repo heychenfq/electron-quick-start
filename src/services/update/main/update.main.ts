@@ -1,12 +1,10 @@
 import { autoUpdater, UpdateInfo } from 'electron-updater';
-import { memoize } from '../../../core/base/decorators';
-import { Event } from '../../../core/base/event';
-import { Disposable } from '../../../core/base/lifecycle';
-import { IpcMainServer } from '../../ipc/main/ipc.main';
 import { inject, service } from '@electron-tools/ioc';
-import { IServerChannel } from '../../ipc/common/ipc';
+import { ElectronIPCMain, ServerChannel } from '@electron-tools/ipc';
+import { memoize } from '../../../core/base/decorators';
 import { UpdateCommands, UpdateEvents } from '../common/update';
 import { LogService } from '../../log/common/log';
+import { fromEvent, Observable } from 'rxjs';
 
 autoUpdater.allowDowngrade = false;
 autoUpdater.allowPrerelease = true;
@@ -15,49 +13,49 @@ autoUpdater.autoInstallOnAppQuit = false;
 autoUpdater.channel = 'latest';
 
 @service('updateMainService')
-export class UpdateMainService extends Disposable {
+export class UpdateMainService {
 
-	@memoize get onError(): Event<Error> { 
-		return Event.fromNodeEventEmitter(autoUpdater, 'error'); 
+	@memoize get onError(): Observable<Error> { 
+		return fromEvent<Error>(autoUpdater, 'error');
 	}
-	@memoize get onCheckingForUpdate(): Event<void> {
-		return Event.fromNodeEventEmitter(autoUpdater, 'checking-for-update');
+	@memoize get onCheckingForUpdate(): Observable<void> {
+		return fromEvent<void>(autoUpdater, 'checking-for-update');
 	}
-	@memoize get onUpdateAvailable(): Event<UpdateInfo> { 
-		return Event.fromNodeEventEmitter<UpdateInfo>(autoUpdater, 'update-available'); 
+	@memoize get onUpdateAvailable(): Observable<UpdateInfo> { 
+		return fromEvent<UpdateInfo>(autoUpdater, 'update-available');
 	}
-	@memoize get onUpdateNotAvailable(): Event<UpdateInfo> { 
-		return Event.fromNodeEventEmitter<UpdateInfo>(autoUpdater, 'update-not-available'); 
+	@memoize get onUpdateNotAvailable(): Observable<UpdateInfo> { 
+		return fromEvent<UpdateInfo>(autoUpdater, 'update-not-available');
 	}
-	@memoize get onDownloadProgress(): Event<UpdateInfo> {
-		return Event.fromNodeEventEmitter<UpdateInfo>(autoUpdater, 'download-progress')
+	@memoize get onDownloadProgress(): Observable<UpdateInfo> {
+		return fromEvent<UpdateInfo>(autoUpdater, 'download-progress');
 	}
-	@memoize get onUpdateDownloaded(): Event<UpdateInfo> { 
-		return Event.fromNodeEventEmitter(autoUpdater, 'update-downloaded'); 
+	@memoize get onUpdateDownloaded(): Observable<UpdateInfo> { 
+		return fromEvent<UpdateInfo>(autoUpdater, 'update-downloaded');
 	}
 
 	constructor(
-		@inject('ipcMainServer')
-		private readonly ipcMainServer: IpcMainServer,
+		@inject('ipcMain')
+		private readonly ipcMain: ElectronIPCMain,
 		@inject('logService')
 		logService: LogService,
 	) {
-		super();
 		autoUpdater.logger = logService;
-		this.#registerIPCServerChannel();
+		this.registerIPCServerChannel();
 	}
 
-	checkForUpdates() {
-		return autoUpdater.checkForUpdates();
+	async checkForUpdates() {
+		const result = await autoUpdater.checkForUpdates();
+		return result.updateInfo;
 	}
 
 	checkForUpdatesAndNotify() {
 		return autoUpdater.checkForUpdatesAndNotify();
 	}
 
-	#registerIPCServerChannel() {
-		const serverChannel: IServerChannel = {
-			call: (_ctx: string, command, _arg): Promise<any> => {
+	private registerIPCServerChannel() {
+		const serverChannel: ServerChannel = {
+			invoke: (_ctx, command, _arg): Promise<any> => {
 				switch(command) {
 					case UpdateCommands.CHECK_FOR_UPDATES:
 						return this.checkForUpdates();
@@ -67,7 +65,7 @@ export class UpdateMainService extends Disposable {
 						throw new Error(`[update] command: ${command} not found`);
 				}
 			},
-			listen: (_ctx: string, event: string, _arg): Event<any> => {
+			event: (_ctx: string, event: string): Observable<any> => {
 				switch(event) {
 					case UpdateEvents.ERROR: 
 						return this.onError;
@@ -86,6 +84,6 @@ export class UpdateMainService extends Disposable {
 				}
 			},
 		};
-		this.ipcMainServer.registerChannel('update', serverChannel);
+		this.ipcMain.registerChannel('update', serverChannel);
 	}
 }

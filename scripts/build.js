@@ -12,29 +12,23 @@ const buildPreload = async () => {
 		bundle: true,
 		minify: true,
 		format: 'iife',
-		external: ['electron', 'electron-log', 'electron-updater'],
+		external: ['electron', 'electron/*'],
 		tsconfig: 'config/tsconfig.electron.json',
+		sourcemap: true,
 	});
 }
 
 const buildMain = async () => {
-	return new Promise((resolve, reject) => {
-		const tscBin = process.platform === 'win32' ? 'tsc.cmd' : 'tsc';
-		const tscCompiler = spawn(tscBin, [
-			'--project', path.resolve(__dirname, '../config/tsconfig.electron.json'),
-		], {
-			stdio: 'inherit',
-			cwd: process.cwd(),
-		});
-		tscCompiler.on('error', (err) => {
-			reject(err);
-		});
-		tscCompiler.on('exit', (code) => {
-			if (code !== 0) {
-				return reject(code);
-			}
-			resolve();
-		})
+	await esbuild.build({
+		entryPoints: ['src/main.ts'],
+		platform: 'node',
+		outfile: 'output/main.js',
+		bundle: true,
+		minify: true,
+		format: 'iife',
+		external: ['electron', 'electron/*'],
+		tsconfig: 'config/tsconfig.electron.json',
+		sourcemap: true,
 	});
 }
 
@@ -42,8 +36,6 @@ const generatePkg = () => {
 	const pkg = JSON.parse(readFileSync(path.resolve(process.cwd(), 'package.json')).toString());
 	pkg.main = './main.js';
 	delete pkg.devDependencies;
-	delete pkg.dependencies.react;
-	delete pkg.dependencies['react-dom'];
 	writeFileSync(path.resolve(process.cwd(), 'output/package.json'), prettier.format(JSON.stringify(pkg), { parser: "json" }));
 }
 

@@ -1,6 +1,7 @@
-const path = require('path');
 const { spawn } = require('child_process');
+const fs = require('fs/promises');
 const esbuild = require('esbuild');
+const path = require('path');
 
 const launchElectron = async () => {
 	let electronProcess;
@@ -20,6 +21,12 @@ const launchElectron = async () => {
 		}
 		doLaunchElectron();
 	}
+
+	async function copyDevFile() {
+		const files = await fs.readdir(path.resolve(__dirname, '../.dev'));
+		return Promise.all(files.map(file => fs.copyFile(path.resolve(__dirname, '../.dev', file), path.resolve(__dirname, '../output', path.basename(file)))))
+	}
+	
 	const watchPreloadSource = () => {
 		esbuild.build({
 			watch: {
@@ -36,32 +43,36 @@ const launchElectron = async () => {
 			platform: 'node',
 			outfile: 'output/preload.js',
 			bundle: true,
-			external: ['electron', 'electron-log'],
+			external: ['electron', 'electron/*'],
 			tsconfig: 'config/tsconfig.electron.json',
+			sourcemap: true,
 		});
 	}	
+
 	const watchMainSource = () => {
-		const tscBin = process.platform === 'win32' ? 'tsc.cmd' : 'tsc';
-		const tscCompiler = spawn(tscBin, [
-			'--project', path.resolve(__dirname, '../config/tsconfig.electron.json'),
-			'--watch',
-		], {
-			stdio: 'pipe',
-			cwd: process.cwd(),
-		});
-		tscCompiler.stdout.on('data', (buffer) => {
-			const message = buffer.toString();
-			if (message.includes('Found 0 errors. Watching for file changes')) {
-				relaunchElectron();
-			} else {
-				console.log(message);
-			}
-		});
-		tscCompiler.on('error', (err) => {
-			process.exit(err.code);
+		esbuild.build({
+			watch: {
+				onRebuild(error, result) {
+					if (error) {
+						console.error('build main error: ', error);
+					} else {
+						relaunchElectron();
+					}
+				},
+			},
+			minify: false,
+			entryPoints: ['src/main.ts'],
+			platform: 'node',
+			outfile: 'output/main.js',
+			bundle: true,
+			external: ['electron', 'electron/*'],
+			tsconfig: 'config/tsconfig.electron.json',
+			sourcemap: true,
 		});
 	};
+	await copyDevFile();
 	watchPreloadSource();
 	watchMainSource();
+	doLaunchElectron();
 }
 launchElectron();

@@ -1,5 +1,5 @@
 
-declare namespace nativeHost {
+declare namespace bridge {
   let process: {
 		platform: string;
 		arch: string;
